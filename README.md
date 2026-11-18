@@ -59,4 +59,5 @@ Authoring and server publication are distinct capabilities. A developer may crea
 
 The development branch is the active source branch. The first milestone is to turn the 2D design slice into domain-backed MicroBundle tooling while keeping interaction semantics portable to VR.
 
-See [docs/FOUNDATION.md](docs/FOUNDATION.md) for architecture and implementation boundaries.
+- [Architectural foundation](docs/FOUNDATION.md)
+- [MicroBundle tooling integration study](docs/CONTRACT_INTEGRATION.md)
