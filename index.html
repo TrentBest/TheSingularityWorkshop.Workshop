@@ -27,8 +27,172 @@ $('#replace').onclick=()=>{let a=['Yellow star','Betelgeuse','Red dwarf','Blue g
 $('#habitable').onclick=()=>{analysisRevision=-1;$('#habit').textContent=star==='Black hole'?'Not applicable · not a star':star==='Betelgeuse'?'Not computed · stellar model required':'Not computed · astronomy engine not connected';$('#habit').className='amber';$('#dropzone').textContent='Analysis requested for candidate revision '+candidateRevision+' · demonstration only; no astrophysical calculation ran'};
 $('#reset').onclick=()=>{worlds=3;$('#worldcount').textContent=3;candidateRevision=0;analysisRevision=-1;setStar('Yellow star',false);$('#dropzone').textContent='Candidate reset to baseline · revision 0'};
 $('#inspect').onclick=()=>alert('Planetary worktable: maps, globe layers, atmosphere and geology tools, orbital context, and revision controls for the selected world.');
-document.querySelectorAll('[data-ingot]').forEach(e=>e.ondragstart=x=>x.dataTransfer.setData('text/plain',e.dataset.ingot));
-function add(t){let n=document.createElement('div');n.className='node';n.innerHTML=t==='State ingot'?'<b>New state</b><small>State ingot<br>identity: unset</small>':'<b>Transition</b><small>Transition ingot<br>slots: incomplete</small>';$('#assembly').append(n);$('#diagnostics').textContent='Assembly changed. Validation is required.'}
-$('#assembly').ondragover=e=>e.preventDefault();$('#assembly').ondrop=e=>{e.preventDefault();let t=e.dataTransfer.getData('text/plain');if(t.includes('ingot'))add(t)};$('#addstate').onclick=()=>add('State ingot');$('#addtransition').onclick=()=>add('Transition ingot');$('#validate').onclick=()=>$('#diagnostics').textContent='Illustrative graph check only. Full validation must come from the FSM domain and runtime contracts.';
-$('#step').onclick=()=>{steps++;$('#activeState').textContent=['Idle','Running','Complete'][Math.min(steps,2)];$('#stepCount').textContent=steps;if(steps>=2)$('#diagnostics').textContent='Demonstration reached terminal state. Runtime semantics are not yet connected.'};
-</script></body></html>
+// Forge candidate graph: local prototype data, deliberately not the authoritative FSM runtime.
+const forge = {
+  states: [
+    { id: 's-idle', name: 'Idle' },
+    { id: 's-running', name: 'Running' },
+    { id: 's-complete', name: 'Complete' }
+  ],
+  transitions: [
+    { id: 't-start', sourceId: 's-idle', destinationId: 's-running', trigger: 'Start' },
+    { id: 't-finish', sourceId: 's-running', destinationId: 's-complete', trigger: 'Finish' }
+  ],
+  validated: false,
+  diagnostics: [],
+  activeStateId: 's-idle',
+  stepCount: 0
+};
+let nextStateId = 1, nextTransitionId = 1;
+const stateById = id => forge.states.find(s => s.id === id);
+function invalidateForge(message='Graph changed. Validate before execution.') {
+  forge.validated = false;
+  forge.diagnostics = [];
+  $('#diagnostics').textContent = message;
+  $('#activeState').textContent = stateById(forge.activeStateId)?.name || '—';
+  $('#stepCount').textContent = forge.stepCount;
+}
+function renderForge() {
+  const host = $('#assembly');
+  host.replaceChildren();
+  forge.states.forEach((state, index) => {
+    const node = document.createElement('div');
+    node.className = 'node';
+    const title = document.createElement('b');
+    title.textContent = state.name;
+    const detail = document.createElement('small');
+    detail.textContent = (index === 0 ? 'Initial state' : 'State ingot') + ' · ' + state.id;
+    node.append(title, detail);
+    host.append(node);
+    const outgoing = forge.transitions.filter(t => t.sourceId === state.id);
+    outgoing.forEach(t => {
+      const arrow = document.createElement('div');
+      arrow.className = 'arrow';
+      const target = stateById(t.destinationId);
+      arrow.textContent = '→ ' + (target ? target.name : 'Missing destination') + (t.trigger ? ' [' + t.trigger + ']' : '');
+      host.append(arrow);
+    });
+  });
+  $('#activeState').textContent = stateById(forge.activeStateId)?.name || '—';
+  $('#stepCount').textContent = forge.stepCount;
+}
+function addState() {
+  const suggested = 'State' + nextStateId;
+  const name = prompt('Name this state:', suggested);
+  if (name === null) return;
+  const clean = name.trim();
+  if (!clean) { $('#diagnostics').textContent = 'State identity is required.'; return; }
+  if (forge.states.some(s => s.name.toLowerCase() === clean.toLowerCase())) {
+    $('#diagnostics').textContent = 'Rejected: state identities must be unique.';
+    return;
+  }
+  const state = { id: 's-new-' + nextStateId++, name: clean };
+  forge.states.push(state);
+  invalidateForge('Added ' + clean + '. It is currently unreachable until a transition connects it.');
+  renderForge();
+}
+function addTransition() {
+  if (forge.states.length < 2) {
+    $('#diagnostics').textContent = 'A transition requires at least two states.';
+    return;
+  }
+  const names = forge.states.map(s => s.name).join(', ');
+  const sourceName = prompt('Source state (' + names + '):', stateById(forge.activeStateId)?.name || forge.states[0].name);
+  if (sourceName === null) return;
+  const destinationName = prompt('Destination state (' + names + '):', forge.states[1].name);
+  if (destinationName === null) return;
+  const source = forge.states.find(s => s.name.toLowerCase() === sourceName.trim().toLowerCase());
+  const destination = forge.states.find(s => s.name.toLowerCase() === destinationName.trim().toLowerCase());
+  if (!source || !destination) {
+    $('#diagnostics').textContent = 'Rejected: source and destination must reference existing state identities.';
+    return;
+  }
+  const trigger = prompt('Trigger label (required; e.g. Start):', 'Trigger' + nextTransitionId);
+  if (trigger === null) return;
+  if (!trigger.trim()) { $('#diagnostics').textContent = 'Transition trigger is required in this prototype.'; return; }
+  forge.transitions.push({ id: 't-new-' + nextTransitionId++, sourceId: source.id, destinationId: destination.id, trigger: trigger.trim() });
+  invalidateForge('Transition added. Validate the graph before entering the Holodeck.');
+  renderForge();
+}
+function validateForge() {
+  const errors = [];
+  if (!forge.states.length) errors.push('At least one state is required.');
+  const ids = new Set(forge.states.map(s => s.id));
+  const names = new Set();
+  forge.states.forEach(s => {
+    if (!s.name.trim()) errors.push('State ' + s.id + ' has no identity.');
+    const key = s.name.trim().toLowerCase();
+    if (names.has(key)) errors.push('Duplicate state identity: ' + s.name + '.');
+    names.add(key);
+  });
+  if (!ids.has(forge.activeStateId)) errors.push('Initial state reference is invalid.');
+  const outgoing = new Map();
+  forge.transitions.forEach(t => {
+    if (!ids.has(t.sourceId)) errors.push('Transition ' + t.id + ' has an invalid source reference.');
+    if (!ids.has(t.destinationId)) errors.push('Transition ' + t.id + ' has an invalid destination reference.');
+    if (!t.trigger || !t.trigger.trim()) errors.push('Transition ' + t.id + ' is missing its required trigger.');
+    if (!outgoing.has(t.sourceId)) outgoing.set(t.sourceId, []);
+    outgoing.get(t.sourceId).push(t);
+  });
+  outgoing.forEach((items, sourceId) => {
+    const triggers = new Set();
+    items.forEach(t => {
+      const key = t.trigger.trim().toLowerCase();
+      if (triggers.has(key)) errors.push('Ambiguous transition: duplicate trigger "' + t.trigger + '" from ' + (stateById(sourceId)?.name || sourceId) + '.');
+      triggers.add(key);
+    });
+  });
+  const reached = new Set([forge.activeStateId]);
+  const queue = [forge.activeStateId];
+  while (queue.length) {
+    const current = queue.shift();
+    (outgoing.get(current) || []).forEach(t => {
+      if (ids.has(t.destinationId) && !reached.has(t.destinationId)) {
+        reached.add(t.destinationId);
+        queue.push(t.destinationId);
+      }
+    });
+  }
+  forge.states.filter(s => !reached.has(s.id)).forEach(s => errors.push('Unreachable state: ' + s.name + '.'));
+  forge.diagnostics = errors;
+  forge.validated = errors.length === 0;
+  $('#diagnostics').textContent = forge.validated
+    ? 'Valid local candidate: ' + forge.states.length + ' states, ' + forge.transitions.length + ' transitions. No domain/runtime verification has occurred.'
+    : errors.length + ' issue(s): ' + errors.join(' ');
+  $('#step').disabled = !forge.validated;
+  return forge.validated;
+}
+function stepForge() {
+  if (!forge.validated) {
+    $('#diagnostics').textContent = 'Execution blocked: validate the current graph first.';
+    return;
+  }
+  const choices = forge.transitions.filter(t => t.sourceId === forge.activeStateId);
+  if (choices.length === 0) {
+    $('#diagnostics').textContent = 'Terminal state reached: ' + (stateById(forge.activeStateId)?.name || 'unknown') + '.';
+    return;
+  }
+  if (choices.length > 1) {
+    $('#diagnostics').textContent = 'Execution blocked: more than one outgoing transition is available; this prototype has no guard evaluator.';
+    return;
+  }
+  forge.activeStateId = choices[0].destinationId;
+  forge.stepCount++;
+  renderForge();
+  const active = stateById(forge.activeStateId);
+  $('#diagnostics').textContent = 'Local illustrative step followed "' + choices[0].trigger + '" into ' + (active?.name || 'unknown') + '. FSM runtime semantics are not connected.';
+}
+document.querySelectorAll('[data-ingot]').forEach(e => e.ondragstart = x => x.dataTransfer.setData('text/plain', e.dataset.ingot));
+$('#assembly').ondragover = e => e.preventDefault();
+$('#assembly').ondrop = e => {
+  e.preventDefault();
+  const type = e.dataTransfer.getData('text/plain');
+  if (type === 'State ingot') addState();
+  else if (type === 'Transition ingot') addTransition();
+};
+$('#addstate').onclick = addState;
+$('#addtransition').onclick = addTransition;
+$('#validate').onclick = validateForge;
+$('#step').onclick = stepForge;
+$('#step').disabled = true;
+renderForge();</script></body></html>
