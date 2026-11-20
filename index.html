@@ -40,6 +40,7 @@ const forge = {
   ],
   validated: false,
   diagnostics: [],
+  initialStateId: 's-idle',
   activeStateId: 's-idle',
   stepCount: 0
 };
@@ -48,6 +49,10 @@ const stateById = id => forge.states.find(s => s.id === id);
 function invalidateForge(message='Graph changed. Validate before execution.') {
   forge.validated = false;
   forge.diagnostics = [];
+  // Any graph mutation starts a fresh candidate run from the declared initial state.
+  forge.activeStateId = forge.initialStateId;
+  forge.stepCount = 0;
+  $('#step').disabled = true;
   $('#diagnostics').textContent = message;
   $('#activeState').textContent = stateById(forge.activeStateId)?.name || '—';
   $('#stepCount').textContent = forge.stepCount;
@@ -125,7 +130,7 @@ function validateForge() {
     if (names.has(key)) errors.push('Duplicate state identity: ' + s.name + '.');
     names.add(key);
   });
-  if (!ids.has(forge.activeStateId)) errors.push('Initial state reference is invalid.');
+  if (!ids.has(forge.initialStateId)) errors.push('Initial state reference is invalid.');
   const outgoing = new Map();
   forge.transitions.forEach(t => {
     if (!ids.has(t.sourceId)) errors.push('Transition ' + t.id + ' has an invalid source reference.');
@@ -142,8 +147,8 @@ function validateForge() {
       triggers.add(key);
     });
   });
-  const reached = new Set([forge.activeStateId]);
-  const queue = [forge.activeStateId];
+  const reached = new Set([forge.initialStateId]);
+  const queue = [forge.initialStateId];
   while (queue.length) {
     const current = queue.shift();
     (outgoing.get(current) || []).forEach(t => {
@@ -172,15 +177,22 @@ function stepForge() {
     $('#diagnostics').textContent = 'Terminal state reached: ' + (stateById(forge.activeStateId)?.name || 'unknown') + '.';
     return;
   }
+  let selected = choices[0];
   if (choices.length > 1) {
-    $('#diagnostics').textContent = 'Execution blocked: more than one outgoing transition is available; this prototype has no guard evaluator.';
-    return;
+    const labels = choices.map((t, i) => (i + 1) + '. ' + t.trigger + ' → ' + (stateById(t.destinationId)?.name || 'missing state')).join('\\n');
+    const answer = prompt('Choose the transition to fire. Guard evaluation is not implemented; this is an explicit illustrative selection.\\n' + labels, choices[0].trigger);
+    if (answer === null) return;
+    selected = choices.find(t => t.trigger.toLowerCase() === answer.trim().toLowerCase());
+    if (!selected) {
+      $('#diagnostics').textContent = 'Execution blocked: no outgoing transition matches "' + answer.trim() + '".';
+      return;
+    }
   }
-  forge.activeStateId = choices[0].destinationId;
+  forge.activeStateId = selected.destinationId;
   forge.stepCount++;
   renderForge();
   const active = stateById(forge.activeStateId);
-  $('#diagnostics').textContent = 'Local illustrative step followed "' + choices[0].trigger + '" into ' + (active?.name || 'unknown') + '. FSM runtime semantics are not connected.';
+  $('#diagnostics').textContent = 'Local illustrative step explicitly selected "' + selected.trigger + '" into ' + (active?.name || 'unknown') + '. Guard evaluation and FSM runtime semantics are not connected.';
 }
 document.querySelectorAll('[data-ingot]').forEach(e => e.ondragstart = x => x.dataTransfer.setData('text/plain', e.dataset.ingot));
 $('#assembly').ondragover = e => e.preventDefault();
