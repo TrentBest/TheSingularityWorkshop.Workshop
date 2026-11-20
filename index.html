@@ -179,8 +179,8 @@ function stepForge() {
   }
   let selected = choices[0];
   if (choices.length > 1) {
-    const labels = choices.map((t, i) => (i + 1) + '. ' + t.trigger + ' → ' + (stateById(t.destinationId)?.name || 'missing state')).join('\\n');
-    const answer = prompt('Choose the transition to fire. Guard evaluation is not implemented; this is an explicit illustrative selection.\\n' + labels, choices[0].trigger);
+    const labels = choices.map((t, i) => (i + 1) + '. ' + t.trigger + ' → ' + (stateById(t.destinationId)?.name || 'missing state')).join('\n');
+    const answer = prompt('Choose the transition to fire. Guard evaluation is not implemented; this is an explicit illustrative selection.\n' + labels, choices[0].trigger);
     if (answer === null) return;
     selected = choices.find(t => t.trigger.toLowerCase() === answer.trim().toLowerCase());
     if (!selected) {
