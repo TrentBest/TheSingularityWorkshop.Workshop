@@ -27,6 +27,10 @@ Legacy fields without IDs remain readable, but Workshop must not treat their nam
 
 The MicroBundleDomain `development` project currently targets `.NET 10.0`, enables nullable reference types and implicit usings, and declares package version `1.0.1`. The `master` project still targets `.NET 8.0`; Workshop integration work must follow the active development contract and ecosystem migration, not infer the active target from the released branch or older getting-started prose.
 
+The authoritative NuGet profile currently lists `TheSingularityWorkshop.MicroBundleDomain` version `1.0.1` as its latest package, targeting `.NET 8.0` and last updated `2026-10-03`. This is not sufficient evidence that the published package contains the later development-source API, including stable parameter identity. A matching package version string does not prove source/binary parity.
+
+**Integration gate:** before adding a package reference, inspect the actual published package API and prove it exposes the required stable-identity members. If it does not, Workshop must wait for a compatible package release or use an explicitly approved source-integration strategy. Do not add a parallel copy of MicroBundleDomain types, fabricate parameter IDs, or claim the adapter is complete against the older package. Workshop must not publish or release the dependency.
+
 Workshop currently has no .NET project or compiled adapter in this repository. Its current `index.html` is a static prototype. Therefore, the contract work here is documentation and prototype-level only; it does not claim a compiled .NET 10 integration.
 
 ## 3. Workshop integration rule
@@ -101,6 +105,6 @@ The visual metaphor (including ingots, bins, tables, globes, and spatial panels)
 
 ## 8. Evidence and implementation boundary
 
-This integration study was checked against the `development` branch source for `TheSingularityWorkshop.MicroBundleDomain.csproj`, `MicroBundleDefinition.cs`, `MicroBundleFieldBuilder.cs`, `MicroBundleDescriptor.cs`, and `IMicroBundle.cs`, plus its getting-started documentation. The project target and parameter-identity contract are branch-specific and should be rechecked when the dependency evolves.
+This integration study was checked against the `development` branch source for `TheSingularityWorkshop.MicroBundleDomain.csproj`, `MicroBundleDefinition.cs`, `MicroBundleFieldBuilder.cs`, `MicroBundleDescriptor.cs`, and `IMicroBundle.cs`, plus its getting-started documentation. The project target and parameter-identity contract are branch-specific and should be rechecked when the dependency evolves. Published package metadata was checked against the TheSingularityWorkshop NuGet profile on 2026-11-19.
 
 It is a Workshop integration plan, not a claim that a live adapter, runtime tool registry, astronomy engine, FSM Forge, permission service, or publication service already exists.
