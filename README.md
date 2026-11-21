@@ -1,10 +1,10 @@
 # TheSingularityWorkshop.Workshop
 
-**Workshop is an Experience for creating Experiences and MicroBundles.**
+**Workshop is the authoritative Experience Trent intends to build: an Experience for creating Experiences and MicroBundles.**
 
 It is a persistent, extensible authoring environment: tools are discovered from the capabilities they represent, presented first through 2D facades, and eventually embodied as diegetic spatial tools in VR.
 
-> Workshop is not a menu of editors. It is a place where domain concepts become things you can handle, arrange, inspect, test, and enter.
+> Workshop is not a menu of editors. It is a place where domain concepts become things you can handle, arrange, inspect, test, negotiate, and enter.
 
 ## First manifestation
 
@@ -20,18 +20,20 @@ Open [the Workshop prototype](index.html).
 1. **Domain-first tools.** A tool's meaning and operations are independent of whether it is rendered on desktop, in a 2D panel, or in VR.
 2. **Diegetic interaction.** Objects, bins, tables, ingots, slots, instruments, and environments are meaningful representations—not decorative skins over unrelated forms.
 3. **Discoverable tooling.** MicroBundles may contribute generic or specialized tools. Workshop discovers and hosts them through explicit contracts.
-4. **Open authoring.** Developers may create Experiences, MicroBundles, and editor Experiences for their own content. Workshop is the canonical meta-authoring environment, not an exclusive authoring authority.
-5. **Separate publication authority.** Creating, editing, executing, and exporting artifacts do not grant permission to publish to someone else's servers. Server publication is separately scoped and controlled by the server owner.
-6. **Reversible exploration.** Experiments operate on isolated candidates. Authored state remains intact until a creator deliberately adopts a result.
-7. **Inspectable execution.** Previewing an authored system should let its creator enter, observe, select, and inspect the running domain.
+4. **Workshop as the canonical Experience.** Workshop is the authoritative meta-authoring Experience in this ecosystem. The ecosystem remains open: others may create their own Experiences, authoring environments, MicroBundles, and tools. They do not thereby become Workshop or gain authority over Workshop-controlled content.
+5. **Pre-arbitration.** MicroBundles are loaded into an editor composition, prepare candidate definitions, then participate in ordered editor-time arbitration. Their interactions can enrich the Experience before runtime, without bespoke integration code between every pair of bundles.
+6. **Separate publication authority.** Creating, editing, executing, and exporting artifacts do not grant permission to publish to someone else's servers. Server publication is separately scoped and controlled by the server owner.
+7. **Reversible exploration.** Experiments operate on isolated candidates. Authored state remains intact until a creator deliberately adopts a result.
+8. **Inspectable execution.** Previewing an authored system should let its creator enter, observe, select, and inspect the running domain.
 
 ## Architecture direction
 
 - Workshop is itself an Experience, composed through the Experience/MicroBundle ecosystem.
 - A tool is defined by domain operations and data contracts, not by its presentation medium.
-- MicroBundles can contribute tool definitions, domain objects, inspectors, and preview capabilities.
-- Workshop supplies discovery, workspace composition, authoring sessions, experiment isolation, revision/adoption, and review surfaces.
-- Domain systems own their semantics. Cosmos Studio owns celestial-system concepts; the Forge owns FSM authoring concepts.
+- MicroBundles can contribute tool definitions, domain objects, inspectors, preview capabilities, and editor-time arbitration behavior.
+- Workshop supplies discovery, workspace composition, authoring sessions, pre-arbitration, review surfaces, experiment isolation, revision/adoption, and prepared-composition generation.
+- Domain systems own their semantics. Cosmos Studio owns celestial-system concepts; the Forge owns FSM authoring concepts; Physics owns physical/material reasoning.
+- The Experience manifest pins participating MicroBundle identities and versions in an explicit sequence. A validated prepared-composition artifact records the result of editor-time arbitration and can accompany the manifest.
 - FSM_COS composes MicroBundles; FSM_Foundry executes them.
 - Renderer and Visualize are consumed as MicroBundles, not NuGet packages.
 
@@ -61,3 +63,4 @@ The development branch is the active source branch. The first milestone is to tu
 
 - [Architectural foundation](docs/FOUNDATION.md)
 - [MicroBundle tooling integration study](docs/CONTRACT_INTEGRATION.md)
+- [Editor-time MicroBundle arbitration](docs/EDITOR_TIME_ARBITRATION.md)
