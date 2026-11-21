@@ -1,7 +1,7 @@
 # MicroBundle Tooling Integration
 
 **Status:** Integration contract study  
-**Scope:** Workshop authoring and tool discovery  
+**Scope:** Workshop authoring, tool discovery, and editor-time composition  
 **Authority:** The current MicroBundleDomain contracts are authoritative. This document does not introduce replacement runtime or editor contracts.
 
 ## 1. Verified contract surfaces
@@ -11,7 +11,9 @@ The current MicroBundleDomain development branch exposes two complementary surfa
 | Surface | Existing contract | Workshop use |
 |---|---|---|
 | Runtime identity and capability | `MicroBundleDescriptor` | Identify a capability and inspect its declared dependencies and providers |
-| Executable lifecycle | `IMicroBundle` | Understand the load and arbitration boundary; Workshop does not replace the composition host |
+| Executable lifecycle | `IMicroBundle` | Load a capability and participate in host-driven arbitration |
+| Load context | `IMicroBundleLoadContext` | Read runtime identity and request configuration bytes |
+| Arbitration context | `IMicroBundleArbitrationContext` | Inspect the participating bundles and opaque host Experience context |
 | Editor description | `MicroBundleDefinition` | Inspect a capability's configurable structure without executing it |
 | Editable fields | `MicroBundleField` | Inspect semantic field kinds: String, Integer, Float, Boolean, Object |
 | Stable parameter identity | `MicroBundleField.ParameterId` | Address an authored parameter independently of its display name or nesting path |
@@ -68,7 +70,42 @@ Stable parameter IDs solve parameter identity; they do not solve tool identity, 
 
 The next contract-design step belongs with the MicroBundleDomain owner: determine whether tool contributions should be represented as an additive editor-facing description surface, provider metadata, or a separate companion contract. Preserve the existing runtime and definition contracts and their host-neutral character.
 
-## 5. Authoring and publication remain separate
+## 5. Editor-time loading and arbitration
+
+The lifecycle has two distinct phases.
+
+### Load-time preparation
+
+The inspected `IMicroBundle` exposes a declared `Dependencies` request list and `Load(IMicroBundleLoadContext)`. The current load context exposes `RuntimeId` and configuration lookup; it does not expose the participating bundle list or a method for requesting additional bundles dynamically.
+
+Therefore:
+
+- Declared dependencies must be resolved by the host before dependent bundles load.
+- A MicroBundle's Load method may initialize its capability and prepare candidate domain definitions using the capabilities and configuration already supplied to it.
+- Workshop's intended experience of discovering/requesting additional MicroBundles during Load requires an additive host-mediated request contract. A bundle must not fetch artifacts directly or mutate the host's dependency closure on its own.
+- If Load needs to inspect the existing composition, that also requires a supported context/API addition; it is not exposed by the current load context.
+
+### Editor-time arbitration
+
+The current contract exposes:
+
+```csharp
+bool Arbitrate(
+    IMicroBundleArbitrationContext context,
+    int roundIndex);
+```
+
+The context exposes the participating `IMicroBundle` instances and an opaque Experience context. The Boolean result indicates whether the bundle changed the composition such that another round is required. The host owns the loop.
+
+Workshop's composition plan must define and record a deterministic order. The Experience manifest declares participating MicroBundle identities and exact versions in sequence; the resolved dependency closure must be added deterministically. Each arbitration round visits bundles in that sequence.
+
+Load-time preparation explains how an earlier arbitrator can see a later bundle's candidate definitions. For example, Magic can prepare fictional element definitions during Load; Elements can then arbitrate before Magic and still see those definitions in the first round.
+
+The current context does not define staged proposals, acceptance/rejection, vetoes, or conflict records. Cross-bundle changes must not become silent writes into another bundle's authored baseline. Those negotiation semantics require additive contract design, including affected-owner consent, deterministic conflict handling, idempotence, bounded rounds, and provenance.
+
+See [Editor-time MicroBundle Arbitration](EDITOR_TIME_ARBITRATION.md) for the worked Weapons/Magic/Elements/Physics example, sparse configuration, prepared-composition artifact, and detailed acceptance criteria.
+
+## 6. Authoring and publication remain separate
 
 Tool discovery does not grant authority over content or infrastructure.
 
@@ -80,7 +117,7 @@ Tool discovery does not grant authority over content or infrastructure.
 
 These are separate capability and authorization decisions. A UI affordance is not an authorization boundary; the enforcing host/server must validate the request.
 
-## 6. 2D and VR parity
+## 7. 2D and VR parity
 
 A tool contribution describes semantic operations, not a particular widget or physical prop.
 
@@ -88,7 +125,7 @@ For example, a numeric parameter may appear as a 2D slider, a numeric field, or 
 
 The visual metaphor (including ingots, bins, tables, globes, and spatial panels) must not become the source of truth.
 
-## 7. Acceptance criteria for the first real adapter
+## 8. Acceptance criteria for the first real adapter
 
 - [ ] Workshop can inspect a real `MicroBundleDefinition` without loading or executing the bundle.
 - [ ] Stable bundle identity and version are preserved exactly.
@@ -102,9 +139,13 @@ The visual metaphor (including ingots, bins, tables, globes, and spatial panels)
 - [ ] Editing a draft does not mutate the source definition or published artifact.
 - [ ] The same semantic edit operation can be manifested by a future VR adapter.
 - [ ] No create/edit/export path implicitly grants server publication authority.
+- [ ] Load-time dynamic dependency requests, if added, are host-mediated, version-pinned, and deterministic.
+- [ ] Arbitration order and round outcomes are recorded and reproducible.
+- [ ] Cross-bundle proposals can be rejected without mutating the affected owner's baseline.
+- [ ] Repeated arbitration is idempotent and terminates or fails with an explicit bounded diagnostic.
 
-## 8. Evidence and implementation boundary
+## 9. Evidence and implementation boundary
 
-This integration study was checked against the `development` branch source for `TheSingularityWorkshop.MicroBundleDomain.csproj`, `MicroBundleDefinition.cs`, `MicroBundleFieldBuilder.cs`, `MicroBundleDescriptor.cs`, and `IMicroBundle.cs`, plus its getting-started documentation. The project target and parameter-identity contract are branch-specific and should be rechecked when the dependency evolves. Published package metadata was checked against the TheSingularityWorkshop NuGet profile on 2026-11-19.
+This integration study was checked against the `development` branch source for `TheSingularityWorkshop.MicroBundleDomain.csproj`, `MicroBundleDefinition.cs`, `MicroBundleFieldBuilder.cs`, `MicroBundleDescriptor.cs`, `IMicroBundle.cs`, `IMicroBundleLoadContext.cs`, and `IMicroBundleArbitrationContext.cs`, plus its getting-started documentation. The project target and parameter-identity contract are branch-specific and should be rechecked when the dependency evolves. Published package metadata was checked against the TheSingularityWorkshop NuGet profile on 2026-11-19.
 
-It is a Workshop integration plan, not a claim that a live adapter, runtime tool registry, astronomy engine, FSM Forge, permission service, or publication service already exists.
+It is a Workshop integration plan, not a claim that a live adapter, runtime tool registry, dynamic dependency loader, proposal negotiation engine, astronomy engine, FSM Forge, permission service, or publication service already exists.
