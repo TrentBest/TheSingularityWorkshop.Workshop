@@ -76,7 +76,7 @@ The lifecycle has two distinct phases.
 
 ### Load-time preparation
 
-The inspected `IMicroBundle` exposes a declared `Dependencies` request list and `Load(IMicroBundleLoadContext)`. The current load context exposes `RuntimeId` and configuration lookup; it does not expose the participating bundle list or a method for requesting additional bundles dynamically.
+The inspected `IMicroBundle` exposes a declared `Dependencies` request list and `Load(IMicroBundleLoadContext)`. The current load context exposes `RuntimeId` and configuration lookup only; it does not expose the participating bundle list, a method for requesting additional bundles dynamically, or a way to obtain a loaded dependency's domain capability interface.
 
 Therefore:
 
@@ -140,6 +140,7 @@ The visual metaphor (including ingots, bins, tables, globes, and spatial panels)
 - [ ] The same semantic edit operation can be manifested by a future VR adapter.
 - [ ] No create/edit/export path implicitly grants server publication authority.
 - [ ] Load-time dynamic dependency requests, if added, are host-mediated, version-pinned, and deterministic.
+- [ ] Load-time access to dependency capabilities is explicit, typed/validated, and supplied by the host; it is not obtained through hidden global state.
 - [ ] Arbitration order and round outcomes are recorded and reproducible.
 - [ ] Cross-bundle proposals can be rejected without mutating the affected owner's baseline.
 - [ ] Repeated arbitration is idempotent and terminates or fails with an explicit bounded diagnostic.
