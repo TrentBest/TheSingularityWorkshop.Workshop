@@ -145,3 +145,38 @@ The prepared artifact should include source identities/versions and hashes, depe
 - Rejection leaves the owner's authored baseline unchanged.
 - Repeated identical proposals are idempotent; non-convergent arbitration stops at a defined bound with provenance.
 - Prepared state can be restored without re-running editor-time arbitration and is rejected if hashes/schema versions are incompatible.
+
+
+## 10. Source-backed integration with current FSM_COS
+
+A follow-up inspection of the current `development` implementations in FSM_COS and MicroBundleDomain sharpens the lifecycle boundary.
+
+### What the host does today
+
+1. `FsmCos.Execute` resolves requested roots through `IMicroBundleCatalog`.
+2. Before invoking any bundle's `Load`, it traverses each resolved bundle's `Dependencies` property and resolves the complete declared dependency graph.
+3. It validates identity, versions where pinned, dependency cycles, limits, and any supplied schedule.
+4. It creates one `MicroBundleLoadContext` containing the runtime ID and configuration lookup.
+5. It loads the dependency graph in dependency-first order. Each bundle receives the same load context and its `Load` entry point is invoked once.
+6. Only after all loads succeed does FSM_COS create an `ArbitrationContext` and run bounded, manifest/composition-order arbitration rounds.
+7. On success, `RuntimeAssembly` exposes typed bundle lookup (`TryGetBundle<TBundle>`) to the consumer. That lookup is a post-composition facility, not a capability lookup available during `Load`.
+
+The current domain `IMicroBundleLoadContext` still exposes only `RuntimeId` and `TryGetConfiguration`. The current dependency request carries an exact version and configuration, but it is still declared through the bundle's pre-load `Dependencies` property. It does not provide a dynamic request operation from inside `Load`.
+
+### Consequence for the proposed lifecycle
+
+The host already has a graph-discovery boundary before the one-time installation callback. This makes **discovery then preparation (Option C)** a particularly natural compatibility path: an additive discovery surface can contribute requests, FSM_COS can close and validate the graph, and a preparation/load callback can then receive typed capability handles for the resolved participants. Existing synchronous `Load(context)` remains valid.
+
+Option B (suspending and resuming one logical load operation) remains viable if the authoring model requires imperative request-then-use flow inside a single logical operation. It is a larger change: it must define continuation ownership, cancellation, reentrancy, request ordering, and how already-started participants are compensated if later discovery fails. It should not be introduced merely to imitate an imperative API when a deterministic discovery/preparation boundary can express the same dependency graph.
+
+**Updated recommendation:** prototype and validate Option C against the current FSM_COS graph resolver first. Keep Option B as an alternative only if real MicroBundle authoring scenarios cannot be expressed cleanly through discovery followed by preparation. Do not add a dynamic resolver call to the existing synchronous `Load` context without first defining the resulting lifecycle and rollback semantics.
+
+### Ownership and visibility boundary
+
+- MicroBundleDomain should own neutral dependency request and typed capability contract vocabulary.
+- FSM_COS should own graph closure, version conflict detection, dependency ordering, bounded preparation, and the resulting effective composition.
+- A bundle's typed capability access during preparation must be scoped to the resolved composition and declared capability contract; it must not become arbitrary catalog access.
+- `RuntimeAssembly.TryGetBundle<TBundle>` remains useful after composition but does not solve the preparation-time access requirement.
+- Arbitration remains a separate phase. The current Boolean convergence signal still does not provide proposal ownership, accept/reject decisions, or durable atomic-change provenance.
+
+This is a source-derived integration analysis, not a public API decision or a change to MicroBundleDomain/FSM_COS.
