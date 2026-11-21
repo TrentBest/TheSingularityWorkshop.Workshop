@@ -132,14 +132,16 @@ public sealed class WorkshopPublishCoordinator
     {
         ArgumentNullException.ThrowIfNull(artifact);
 
-        if (!await _gate.WaitAsync(0, cancellationToken).ConfigureAwait(false))
-            return new WorkshopPublishAttempt(
-                WorkshopPublishStatus.Rejected,
-                Failure: WorkshopPublishFailure.Busy,
-                Diagnostic: "A Workshop publish transaction is already active.");
-
+        var entered = false;
         try
         {
+            if (!await _gate.WaitAsync(0, cancellationToken).ConfigureAwait(false))
+                return new WorkshopPublishAttempt(
+                    WorkshopPublishStatus.Rejected,
+                    Failure: WorkshopPublishFailure.Busy,
+                    Diagnostic: "A Workshop publish transaction is already active.");
+
+            entered = true;
             var credential = await _credentials.GetCredentialAsync(cancellationToken).ConfigureAwait(false);
             if (credential is null)
                 return new WorkshopPublishAttempt(
@@ -176,7 +178,8 @@ public sealed class WorkshopPublishCoordinator
         }
         finally
         {
-            _gate.Release();
+            if (entered)
+                _gate.Release();
         }
     }
 }
