@@ -2,9 +2,20 @@
 
 ## Status
 
-This repository currently has no editor, application host, authoring service, or publishing implementation. This document defines the first integration boundary; it does not claim that a Workshop editor exists.
+This repository initially had no editor, application host, authoring service, or publishing implementation. The first implementation increment now adds a small .NET 10 publishing-contract library and focused tests; it deliberately does not invent a UI framework or claim that a Workshop editor exists.
 
 The validated publisher is the MicroBundleRepository CLI introduced by [MicroBundleRepository PR #41](https://github.com/TrentBest/TheSingularityWorkshop.MicroBundleRepository/pull/41). That CLI publishes portable identity tuples through the repository REST API and requires the Workshop publisher credential.
+
+### Implemented foundation
+
+- The `WorkshopArtifact` owns a defensive copy of selected bytes and computes the SHA-256 portable identity.
+- `WorkshopPublisherCredential` redacts its string representation.
+- Narrow credential-provider and publisher-adapter interfaces separate host secret storage and transport from coordination.
+- `WorkshopPublishCoordinator.PublishFromExplicitUserActionAsync` is the only coordinator entry point. It serializes concurrent attempts, fails closed when no credential is available, suppresses raw exception text, and rejects a successful publisher response whose identity differs from the selected artifact.
+- Initial tests cover defensive artifact bytes, SHA-256 identity, credential redaction, missing-credential behavior, identity mismatch, and matching-identity success.
+- A .NET 10 GitHub Actions build/test workflow now exercises the contract test project.
+
+This is not yet a complete publisher integration: no concrete OS secret-store provider, CLI process adapter, editor UI, manifest writer, or controlled end-to-end repository test exists yet.
 
 ## Authority and lifecycle
 
@@ -28,7 +39,7 @@ A successful publish creates/returns a portable identity consisting of ontology,
 2. Workshop validates the composition and resolves every selected artifact to its exact bytes and declared ontology/version.
 3. A user explicitly invokes **Publish**. The action is disabled while the candidate is invalid or another publish transaction is active.
 4. Workshop obtains the publisher credential from a host-owned secret provider. The secret is never part of the candidate, manifest, command-line arguments, UI state, telemetry, or logs.
-5. Workshop invokes the repository publisher through a narrow adapter. The currently validated CLI accepts the credential only through the environment variable MICRO_BUNDLE_REPOSITORY_WORKSHOP_PUBLISHER_KEY; it must not be supplied as an argument.
+5. Workshop invokes the repository publisher through a narrow adapter. The currently validated CLI accepts the credential only through the environment variable `MICRO_BUNDLE_REPOSITORY_WORKSHOP_PUBLISHER_KEY`; it must not be supplied as an argument.
 6. The adapter captures cancellation, exit status, and bounded diagnostics. It must redact credential-like values and must never echo the process environment.
 7. Workshop accepts success only after the publisher has confirmed the repository-assigned portable identity and exact artifact read-back. A zero exit code alone is insufficient.
 8. Workshop records the returned immutable identity in the authoring/publishing result. The Experience manifest is produced from the validated candidate composition, not from a repository-side selection or arbitration step.
@@ -41,7 +52,7 @@ Keep the editor independent of process-launch details and secret storage. The in
 
 - **IWorkshopPublisherCredentialProvider**: asynchronously obtains the publisher secret from a host-controlled secret store; returns no secret in diagnostic representations.
 - **IWorkshopMicroBundlePublisher**: accepts a validated artifact request and cancellation token; returns the verified portable identity/binding or a typed failure.
-- **IWorkshopPublishCoordinator**: enforces the explicit user action, serializes concurrent publish attempts for the same candidate, and reports transaction state to the editor.
+- **IWorkshopPublishCoordinator**: enforces the explicit user action, serializes concurrent publish attempts, and reports transaction state to the editor.
 
 The editor should depend on the coordinator, not directly on process launch, HTTP, environment variables, or repository storage APIs.
 
@@ -62,17 +73,18 @@ Never log the publisher secret, full environment, authorization header, or raw e
 
 ## Acceptance criteria
 
-- [ ] Workshop has an explicit, user-initiated publish action.
+- [ ] Workshop editor exposes an explicit, user-initiated publish action.
 - [ ] No background or automatic path can invoke publishing.
 - [ ] Candidate composition is validated and arbitrated by Workshop before publication.
-- [ ] Publisher credential is retrieved from a host-owned secret provider and is never committed or displayed.
+- [x] The publishing contract represents an artifact by ontology, exact version, and SHA-256 computed from a defensive byte copy.
+- [ ] Publisher credential is retrieved from a concrete host-owned secret provider and is never committed or displayed.
 - [ ] Secret is absent from command-line arguments, logs, telemetry, manifests, and diagnostic output.
-- [ ] Missing/invalid credentials fail closed.
-- [ ] Cancellation and indeterminate network outcomes are represented distinctly.
-- [ ] Returned ontology, exact version, and SHA-256 are checked against the selected artifact.
-- [ ] Artifact bytes are verified by repository read-back before success is reported.
+- [x] Missing credentials fail closed before the publisher adapter is invoked.
+- [ ] Cancellation and indeterminate network outcomes are represented distinctly by the integration adapter.
+- [x] A publisher response marked successful is accepted only when its returned identity matches the selected artifact.
+- [ ] Artifact bytes are verified by repository read-back before success is reported by the Workshop adapter.
 - [ ] Published Experience manifests pin immutable identities and are not silently rewritten by later repository updates.
-- [ ] Tests cover explicit-action gating, secret redaction, cancellation, authorization failure, read-back mismatch, and successful round-trip.
+- [x] Initial tests cover defensive artifact ownership, credential redaction, missing credentials, identity mismatch, and successful identity validation.
 
 ## Deliberate non-goals
 
