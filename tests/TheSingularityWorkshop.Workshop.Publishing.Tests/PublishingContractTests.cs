@@ -1,4 +1,5 @@
 using TheSingularityWorkshop.Workshop.Publishing;
+using Xunit;
 
 namespace TheSingularityWorkshop.Workshop.Publishing.Tests;
 
