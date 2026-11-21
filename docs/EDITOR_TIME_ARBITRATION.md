@@ -12,6 +12,8 @@ The distinctive Workshop capability is **pre-arbitration**: before an authored E
 
 This is not simply an editor feature. It is a way for independently authored capabilities to become more expressive through composition, without every Experience creator having to write bespoke integration code between them.
 
+See also [Load-Time Dependency Discovery and Arbitration Contract Proposal](LOAD_TIME_CONTRACT_PROPOSAL.md) for concrete lifecycle alternatives, the recommended staged-continuation direction, proposal semantics, compatibility constraints, and acceptance tests.
+
 ## Two distinct lifecycle moments
 
 Do not collapse loading and arbitration into one operation. They solve different problems.
