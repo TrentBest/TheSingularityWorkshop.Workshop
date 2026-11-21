@@ -56,6 +56,22 @@ public sealed class PublishingContractTests
     }
 
     [Fact]
+    public async Task CancellationBeforeGateAcquisitionReturnsCancelled()
+    {
+        var publisher = new RecordingPublisher();
+        var coordinator = new WorkshopPublishCoordinator(new TestCredentialProvider(), publisher);
+        var artifact = new WorkshopArtifact("workshop/example", "1.0.0", [1]);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var result = await coordinator.PublishFromExplicitUserActionAsync(artifact, cancellation.Token);
+
+        Assert.Equal(WorkshopPublishStatus.Cancelled, result.Status);
+        Assert.Equal(WorkshopPublishFailure.Cancelled, result.Failure);
+        Assert.False(publisher.WasInvoked);
+    }
+
+    [Fact]
     public async Task MatchingIdentityIsAccepted()
     {
         var artifact = new WorkshopArtifact("workshop/example", "1.0.0", [1, 2, 3]);
