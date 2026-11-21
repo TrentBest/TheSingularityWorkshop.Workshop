@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>TheSingularityWorkshop.Workshop.Publishing</AssemblyName>
+    <RootNamespace>TheSingularityWorkshop.Workshop.Publishing</RootNamespace>
+  </PropertyGroup>
+</Project>
