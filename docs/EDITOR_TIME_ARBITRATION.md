@@ -22,9 +22,9 @@ The host resolves and materializes the participating MicroBundles, then invokes 
 
 The load phase establishes the editor-time environment and prepares candidate contributions. A bundle may need other capabilities to be present before it can do useful work. It can declare dependencies, receive their configuration, and use the supported domain operations exposed by the participating capabilities to prepare candidate definitions.
 
-The intended Workshop experience also calls for a bundle to discover that it needs an additional capability while loading, request that capability through the host, and continue once the host has resolved and loaded it. This is a **host-mediated dynamic dependency/discovery requirement**, not permission for a MicroBundle to reach directly into a repository, download arbitrary code, or mutate the host's composition behind its back.
+The intended Workshop experience also calls for a bundle to discover that it needs an additional capability while loading, request that capability through the host, and continue once the host has resolved and loaded it. It also needs a supported way for the loading bundle to access the already loaded dependency's domain operations. These are **host-mediated dynamic dependency/discovery and capability-access requirements**, not permission for a MicroBundle to reach directly into a repository, download arbitrary code, or mutate the host's composition behind its back.
 
-**Current contract boundary:** the inspected MicroBundleDomain development contract exposes `IMicroBundle.Dependencies` as a declared request list. `IMicroBundle.Load(IMicroBundleLoadContext)` receives runtime identity and configuration lookup, but the current load context does not expose the participating bundle collection or a dynamic dependency-request operation. Therefore, dynamic dependency discovery during `Load` is a target capability that requires an additive host/domain contract; it must not be described as already implemented.
+**Current contract boundary:** the inspected MicroBundleDomain development contract exposes `IMicroBundle.Dependencies` as a declared request list. `IMicroBundle.Load(IMicroBundleLoadContext)` receives runtime identity and configuration lookup only. The current load context does not expose the participating bundle collection, a dynamic dependency-request operation, or a way to obtain a loaded dependency's capability interface. Therefore, dynamic dependency discovery and dependency capability access during `Load` are target capabilities that require additive host/domain contracts; they must not be described as already implemented.
 
 Load-time preparation can use already resolved capabilities to create candidate domain definitions. It must not silently overwrite another bundle's authored baseline. Candidate changes remain attributable and reviewable.
 
@@ -183,11 +183,12 @@ The current MicroBundleDomain development contract already provides:
 The following are not established by those interfaces as currently inspected and must be designed additively before claiming the full Workshop vision is implemented:
 
 1. Host-mediated dynamic dependency/discovery requests during Load.
-2. Load-time inspection of the already resolved composition, if required.
-3. Explicit staged proposals and accept/reject/veto semantics for cross-bundle changes.
-4. Deterministic conflict policy and bounded convergence/failure behavior.
-5. A versioned Experience manifest/composition-plan contract carrying explicit sequence and exact dependency closure.
-6. A versioned prepared-composition format with sparse stable-ID overrides, provenance, integrity checks, and FSM_Serialization integration.
+2. A supported Load-time capability-access seam for invoking already loaded dependency operations; the current load context exposes configuration bytes only.
+3. Load-time inspection of the already resolved composition, if required.
+4. Explicit staged proposals and accept/reject/veto semantics for cross-bundle changes.
+5. Deterministic conflict policy and bounded convergence/failure behavior.
+6. A versioned Experience manifest/composition-plan contract carrying explicit sequence and exact dependency closure.
+7. A versioned prepared-composition format with sparse stable-ID overrides, provenance, integrity checks, and FSM_Serialization integration.
 
 Do not duplicate MicroBundleDomain types inside Workshop or make a competing lifecycle. Evolve the shared contracts with the domain owner, preserve host neutrality, and keep FSM_COS as the composition orchestrator.
 
