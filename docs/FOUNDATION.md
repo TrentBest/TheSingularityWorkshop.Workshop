@@ -55,7 +55,7 @@ Arbitration must be deterministic, idempotent, bounded, and convergent. A bundle
 
 The inspected MicroBundleDomain development contract provides declared dependency requests, `Load(IMicroBundleLoadContext)`, and `Arbitrate(IMicroBundleArbitrationContext, int roundIndex)`. The arbitration context exposes participating bundles, and the Boolean arbitration result indicates whether another round is required.
 
-The current load context does not expose the bundle collection or a dynamic dependency-request operation. The current arbitration context does not define a first-class proposal/accept/reject protocol or conflict-resolution record. Those are explicit contract-evolution requirements, not implemented Workshop features. Workshop must not duplicate MicroBundleDomain types or invent a competing lifecycle.
+The current load context exposes runtime identity and configuration lookup only; it does not expose the bundle collection, a dynamic dependency-request operation, or a way to obtain a loaded dependency's domain capability interface. The current arbitration context does not define a first-class proposal/accept/reject protocol or conflict-resolution record. Those are explicit contract-evolution requirements, not implemented Workshop features. Workshop must not duplicate MicroBundleDomain types or invent a competing lifecycle.
 
 See [Editor-time MicroBundle Arbitration](EDITOR_TIME_ARBITRATION.md) for the full lifecycle, worked example, contract gaps, manifest sequence, configuration, prepared artifact, and acceptance criteria.
 
