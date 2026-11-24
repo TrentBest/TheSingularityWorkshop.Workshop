@@ -138,8 +138,9 @@
         const source = endpoint(text(input.sourceStationId, "Source station"), text(input.sourcePortId, "Source port"), "output");
         const target = endpoint(text(input.targetStationId, "Target station"), text(input.targetPortId, "Target port"), "input");
         if (!same(source.port.schema, target.port.schema)) throw new Error("Port schemas are incompatible: " + source.port.schema.id + "@" + source.port.schema.version + " != " + target.port.schema.id + "@" + target.port.schema.version);
-        if (sourcePublisher !== targetPublisher && !trustedCreators.has(targetPublisher) && !trustedCreators.has(sourcePublisher)) {
-          throw new Error("Cross-publisher connection is not covered by workspace trust policy.");
+        if (source.station.source.creatorId !== target.station.source.creatorId &&
+            !trustedCreators.has(source.station.source.creatorId) && !trustedCreators.has(target.station.source.creatorId)) {
+          throw new Error("Cross-creator connection is not covered by workspace trust policy.");
         }
         const proposal = freeze({
           id: text(input.id, "Proposal identity"), workspaceId, revision,
