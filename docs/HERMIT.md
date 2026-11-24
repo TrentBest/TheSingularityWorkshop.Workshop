@@ -33,6 +33,10 @@ The loop is deliberately evidence-driven. A proposal is not an outcome; an actio
 
 Hermit must not create shadow implementations of Physics, Gestures, or Neural Networks. If a required capability is absent, Hermit reports the gap and can still help design the experiment.
 
+## Integration map
+
+The cross-repository seams and current implementation gaps are tracked in [Hermit integration map](HERMIT_INTEGRATION.md). In particular, GUI execution hosting remains a contract surface, Physics exports bounded contact providers rather than general manipulation solvers, and Gestures produces evaluated local pose intent rather than achieved physical motion.
+
 ## Shell contract
 
 The browser prototype's `hermit-core.js` is a deterministic reference implementation for contract behavior and acceptance tests. Because it executes in an untrusted client, it is **not** a security boundary: production hosts must independently authenticate creators, validate approvals, enforce expiry and durable one-use/replay protection, check capability identity and version at invocation time, and own cancellation and resource limits. The reference core's in-memory single-use tracking is intentionally not durable.
