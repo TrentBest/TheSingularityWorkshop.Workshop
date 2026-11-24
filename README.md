@@ -54,6 +54,7 @@ FSMs are assembled from state and transition ingots. Slots represent typed requi
 Hermit is Workshop's creative assistant: it enters bounded environments through host-provided shells, observes available capabilities, proposes inspectable experiments, and explains outcomes without silently changing the creator's baseline.
 
 - [Hermit architecture and safety contract](docs/HERMIT.md)
+- [Hermit integration map](docs/HERMIT_INTEGRATION.md)
 - [Handling-floor prototype](hermit.html)
 - [Deterministic core acceptance tests](hermit-core.tests.html)
 
