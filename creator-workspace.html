@@ -39,50 +39,98 @@ button{font:inherit;color:var(--ink);background:#1b2b41;border:1px solid var(--l
 </div>
 <p class="footer">Design rule: providers describe typed tools and ports; Workshop renders and governs them. See the host reference core and acceptance tests for strict provider, trust, and connection validation. A contribution cannot take over the host, silently connect to another creator's work, or mutate its source bundle's baseline.</p>
 </main>
+<script src="diegetic-composition.js"></script>
 <script>
+const workspaceId="workshop.creator-floor.demo";
+const creatorId="creator.demo";
+const publisherId="workshop.fixture.publisher";
 const definitions={
- cosmos:{name:"Cosmos Studio",bundle:"Cosmos",provider:true,providerId:"fixture.cosmos.diegetic-gui.v1",description:"Compose celestial bodies and inspect candidate systems.",ports:[["system.input","System definition","in"],["system.analysis","Analysis result","out"]]},
- forge:{name:"The Forge",bundle:"The Forge",provider:true,providerId:"fixture.forge.diegetic-gui.v1",description:"Assemble typed states, transitions, and executable graphs.",ports:[["fsm.definition","FSM definition","out"],["fsm.preview","Preview request","in"]]},
- physics:{name:"Physics",bundle:"Physics",provider:false,providerId:null,description:"Domain capability bundle. No diegetic GUI provider declared in this fixture.",ports:[]},
- gestures:{name:"Gesture Studio",bundle:"Gestures",provider:true,providerId:"fixture.gestures.diegetic-gui.v1",description:"Author timed movement intent and inspect evaluated poses.",ports:[["gesture.intent","Movement intent","out"],["gesture.target","Target mapping","in"]]},
- hermit:{name:"Hermit",bundle:"Workshop",provider:true,providerId:"workshop.hermit-resident.v1",description:"Persistent creator companion for observation, proposals, and experiments.",ports:[["workspace.observe","Workspace snapshot","in"],["experiment.proposal","Experiment proposal","out"]]}
+ cosmos:{name:"Cosmos Studio",bundle:"Cosmos",providerId:"fixture.cosmos.diegetic-gui.v1",description:"Compose celestial bodies and inspect candidate systems.",tools:[{id:"cosmos-tool",title:"Cosmos Studio",description:"Compose celestial bodies and inspect candidate systems.",domain:{id:"domain.cosmos.systems",version:"1"},ports:[{id:"system.input",title:"System definition",direction:"input",schema:{id:"schema.system.definition",version:"1"}},{id:"system.analysis",title:"Analysis result",direction:"output",schema:{id:"schema.system.analysis",version:"1"}}]}]},
+ forge:{name:"The Forge",bundle:"The Forge",providerId:"fixture.forge.diegetic-gui.v1",description:"Assemble typed states, transitions, and executable graphs.",tools:[{id:"forge-tool",title:"The Forge",description:"Assemble typed states, transitions, and executable graphs.",domain:{id:"domain.fsm.authoring",version:"1"},ports:[{id:"fsm.definition",title:"FSM definition",direction:"output",schema:{id:"schema.system.definition",version:"1"}},{id:"fsm.preview",title:"Preview request",direction:"input",schema:{id:"schema.system.analysis",version:"1"}}]}]},
+ physics:{name:"Physics",bundle:"Physics",providerId:null,description:"Domain capability bundle. No diegetic GUI provider declared in this fixture.",tools:[]},
+ gestures:{name:"Gesture Studio",bundle:"Gestures",providerId:"fixture.gestures.diegetic-gui.v1",description:"Author timed movement intent and inspect evaluated poses.",tools:[{id:"gesture-tool",title:"Gesture Studio",description:"Author timed movement intent and inspect evaluated poses.",domain:{id:"domain.gestures.intent",version:"1"},ports:[{id:"gesture.intent",title:"Movement intent",direction:"output",schema:{id:"schema.movement.intent",version:"1"}},{id:"gesture.target",title:"Target mapping",direction:"input",schema:{id:"schema.movement.intent",version:"1"}}]}]},
+ hermit:{name:"Hermit",bundle:"Workshop",providerId:"workshop.hermit-resident.v1",description:"Creator companion for observation, proposals, and experiments.",tools:[{id:"hermit-tool",title:"Hermit",description:"Creator companion for observation, proposals, and experiments.",domain:{id:"domain.workshop.assistance",version:"1"},ports:[{id:"workspace.observe",title:"Workspace snapshot",direction:"input",schema:{id:"schema.workspace.snapshot",version:"1"}},{id:"experiment.proposal",title:"Experiment proposal",direction:"output",schema:{id:"schema.experiment.proposal",version:"1"}}]}]}
 };
-const loaded=new Set(),connections=[];let output="experience";
+const fixtures=new Map(Object.entries(definitions).filter(([,d])=>d.providerId).map(([key,d])=>[d.providerId,{id:d.providerId,contractVersion:"1",contribution:{tools:d.tools}}]));
+const host=WorkshopDiegeticComposition.createHost({workspaceId,creatorId,trustedPublishers:[publisherId],resolveProvider:(bundle,declaration)=>fixtures.get(declaration.id)||null});
+const loaded=new Map(),pending=new Map();let output="experience",proposalSequence=0;
 const $=s=>document.querySelector(s);
 function log(message){const p=document.createElement("p");p.textContent=message;$("#trace").prepend(p)}
+function showError(error){$("#discovery").textContent="Composition rejected: "+error.message;log("Host rejected operation: "+error.message)}
+function bundleDescriptor(key){const d=definitions[key];return {id:"fixture.bundle."+key,version:"1.0.0",publisherId,creatorId,providers:d.providerId?[{id:d.providerId,contractVersion:"1"}]:[]}}
+function portRows(station){
+ const wrap=document.createElement("div");wrap.className="ports";
+ station.tools.forEach(tool=>tool.ports.forEach(port=>{
+  const row=document.createElement("div");row.className="port "+(port.direction==="output"?"output":"");
+  const label=document.createElement("span");label.textContent=port.title+" · "+port.schema.id+"@"+port.schema.version;
+  const kind=document.createElement("b");kind.textContent=port.direction.toUpperCase();row.append(label,kind);wrap.append(row);
+ }));
+ return wrap;
+}
+function renderConnections(){
+ const el=$("#connections");el.innerHTML="";
+ const snapshot=host.snapshot;
+ if(!snapshot.connections.length&&!pending.size){el.innerHTML='<p style="font-size:11px;color:var(--muted)">No connections yet. Load compatible contributions and propose a typed connection.</p>';return}
+ snapshot.connections.forEach(c=>{
+  const div=document.createElement("div");div.className="connection";const b=document.createElement("b");b.textContent="Creator approved";
+  const p=document.createElement("div");p.textContent=c.source.stationId+" / "+c.source.portId+" → "+c.target.stationId+" / "+c.target.portId;div.append(b,p);el.append(div);
+ });
+ pending.forEach(p=>{
+  const div=document.createElement("div");div.className="bundle";div.style.borderColor="var(--gold)";
+  const title=document.createElement("strong");title.textContent="Approval required · "+p.id;
+  const detail=document.createElement("small");detail.textContent=p.source.stationId+" / "+p.source.portId+" → "+p.target.stationId+" / "+p.target.portId;
+  const approve=document.createElement("button");approve.textContent="Approve connection";approve.onclick=()=>{try{host.approveConnection(p,{creatorId,proposalId:p.id});pending.delete(p.id);log("Creator approved exact proposal "+p.id+".");render()}catch(e){showError(e)}};
+  const reject=document.createElement("button");reject.textContent="Reject";reject.style.marginLeft="6px";reject.onclick=()=>{try{host.rejectConnection(p,creatorId);pending.delete(p.id);log("Creator rejected proposal "+p.id+".");render()}catch(e){showError(e)}};
+  div.append(title,detail,approve,reject);el.append(div);
+ });
+}
+function proposeFrom(stationId){
+ const snapshot=host.snapshot,source=snapshot.stations.find(s=>s.id===stationId);if(!source)return;
+ const outputs=source.tools.flatMap(t=>t.ports.filter(p=>p.direction==="output").map(port=>({tool:t,port})));
+ const inputs=snapshot.stations.filter(s=>s.id!==stationId).flatMap(s=>s.tools.flatMap(t=>t.ports.filter(p=>p.direction==="input").map(port=>({station:s,tool:t,port}))));
+ for(const out of outputs){
+  const target=inputs.find(x=>x.port.schema.id===out.port.schema.id&&x.port.schema.version===out.port.schema.version);
+  if(!target)continue;
+  const id="proposal-"+(++proposalSequence);
+  try{
+   const proposal=host.proposeConnection({id,sourceStationId:stationId,sourcePortId:out.port.id,targetStationId:target.station.id,targetPortId:target.port.id});
+   pending.set(id,proposal);log("Typed connection proposed; awaiting your approval: "+id);renderConnections();return;
+  }catch(e){showError(e);return}
+ }
+ log("No compatible typed input is currently mounted for "+source.title+".");
+}
 function render(){
  const stations=$("#stations");stations.innerHTML="";
- const entries=[...loaded].map(id=>definitions[id]).filter(d=>d.provider);
- $("#floorState").textContent=entries.length+" diegetic contribution"+(entries.length===1?"":"s")+" mounted";
- if(!entries.length){stations.innerHTML='<div class="empty"><strong>No diegetic tools discovered</strong>Loaded bundles without an IDiegeticGUI provider remain available as domain capabilities, but contribute no station.</div>'}
- entries.forEach(d=>{
+ const snapshot=host.snapshot;
+ $("#floorState").textContent=snapshot.stations.length+" diegetic station"+(snapshot.stations.length===1?"":"s")+" mounted · revision "+snapshot.revision;
+ if(!snapshot.stations.length){stations.innerHTML='<div class="empty"><strong>No diegetic tools discovered</strong>Loaded bundles without a provider remain domain-only. Load a provider fixture to mount a station.</div>'}
+ snapshot.stations.forEach(station=>{
   const card=document.createElement("article");card.className="station";
-  const h=document.createElement("h3");h.textContent=d.name;card.append(h);
-  const src=document.createElement("div");src.className="source";src.textContent=d.bundle+" · "+d.providerId;card.append(src);
-  const p=document.createElement("p");p.textContent=d.description;card.append(p);
-  const ports=document.createElement("div");ports.className="ports";
-  d.ports.forEach(port=>{const row=document.createElement("div");row.className="port "+(port[2]==="out"?"output":"");const label=document.createElement("span");label.textContent=port[1];const kind=document.createElement("b");kind.textContent=port[2]==="out"?"OUTPUT":"INPUT";row.append(label,kind);ports.append(row)});
-  card.append(ports);const button=document.createElement("button");button.className="connect";button.textContent="Propose compatible connection";button.onclick=()=>proposeConnection(d);card.append(button);stations.append(card);
+  const h=document.createElement("h3");h.textContent=station.title;card.append(h);
+  const src=document.createElement("div");src.className="source";src.textContent=station.source.id+"@"+station.source.version+" · "+station.provider.id+"@"+station.provider.contractVersion;card.append(src);
+  const p=document.createElement("p");p.textContent=station.description;card.append(p);card.append(portRows(station));
+  const button=document.createElement("button");button.className="connect";button.textContent="Propose compatible connection";button.onclick=()=>proposeFrom(station.id);card.append(button);
+  const unload=document.createElement("button");unload.className="connect";unload.textContent="Unload source MicroBundle";unload.onclick=()=>unloadBundle(station.source.id);card.append(unload);
+  stations.append(card);
  });
+ $("#discovery").textContent=snapshot.bundles.length+" bundle(s) loaded · "+snapshot.stations.length+" provider contribution(s) resolved by host";
  renderConnections();
 }
-function renderConnections(){const el=$("#connections");el.innerHTML="";if(!connections.length){el.innerHTML='<p style="font-size:11px;color:var(--muted)">No connections yet. Mount two compatible contributions to propose a connection.</p>';return}
- connections.forEach(c=>{const div=document.createElement("div");div.className="connection";const b=document.createElement("b");b.textContent="Creator approved";const p=document.createElement("div");p.textContent=c;div.append(b,p);el.append(div)})}
-function proposeConnection(source){
- const target=[...loaded].map(id=>definitions[id]).find(d=>d.provider&&d.name!==source.name&&source.ports.some(p=>p[2]==="out")&&d.ports.some(p=>p[2]==="in"));
- if(!target){log("No compatible mounted input endpoint found for "+source.name+".");$("#discovery").textContent="Connection unavailable: load a compatible receiving tool.";return}
- const out=source.ports.find(p=>p[2]==="out"),input=target.ports.find(p=>p[2]==="in");
- if(!confirm("Connect "+source.name+" / "+out[1]+" → "+target.name+" / "+input[1]+"? This is a creator-approved fixture connection.")){log("Creator declined proposed connection.");return}
- const connection=source.name+" · "+out[0]+" → "+target.name+" · "+input[0];if(!connections.includes(connection))connections.push(connection);
- log("Creator approved candidate connection: "+connection);renderConnections();
+function load(key){
+ const d=definitions[key],descriptor=bundleDescriptor(key);
+ try{
+  if(loaded.has(key)){log(d.bundle+" is already loaded.");return}
+  const result=host.loadBundle(descriptor);loaded.set(key,descriptor.id);
+  $("#discovery").textContent=result.bundle.id+" loaded · "+result.mounted.length+" station(s) mounted";
+  log("Host loaded "+descriptor.id+"; resolved "+descriptor.providers.length+" declared provider(s); mounted "+result.mounted.length+" station(s).");
+  if(!result.mounted.length)log("No provider declared: bundle remains available as a domain-only participant.");
+  render();
+ }catch(e){showError(e)}
 }
-function load(id){
- if(loaded.has(id)){log(definitions[id].bundle+" is already present in this composition.");return}
- loaded.add(id);const d=definitions[id];
- if(d.provider){$("#discovery").textContent="Found IDiegeticGUI contribution: "+d.providerId;log("Resolved "+d.bundle+" fixture; discovered "+d.providerId+"; mounted "+d.name+".")}
- else{$("#discovery").textContent=d.bundle+" loaded; no IDiegeticGUI provider declared.";log("Loaded "+d.bundle+" fixture. Domain capability only; no diegetic station to mount.")}
- render();
+function unloadBundle(bundleId){
+ try{host.unloadBundle(bundleId,creatorId);for(const [key,id] of loaded)if(id===bundleId)loaded.delete(key);pending.clear();log("Unloaded "+bundleId+"; dependent connections and pending proposals invalidated.");render()}catch(e){showError(e)}
 }
 document.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>load(b.dataset.load));
 document.querySelectorAll("[data-output]").forEach(b=>b.onclick=()=>{output=b.dataset.output;document.querySelectorAll("[data-output]").forEach(x=>x.classList.toggle("active",x===b));$("#outputNote").textContent=output==="experience"?"A complete Experience composition, with pinned MicroBundle identities and prepared state.":"A reusable MicroBundle contribution with declared capabilities, providers, and configuration.";log("Creator selected output target: "+output+".")});
-</script></body></html>
+render();
+</script></body></html></body></html>
