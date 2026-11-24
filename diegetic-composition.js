@@ -103,7 +103,8 @@
       },
       loadBundle(bundleInput) {
         const bundle = identity(bundleInput, "MicroBundle");
-        const publisherId = text(bundleInput.publisherId, "Publisher identity");\n        const bundleCreatorId = text(bundleInput.creatorId || publisherId, "Bundle creator identity");
+        const publisherId = text(bundleInput.publisherId, "Publisher identity");
+        const bundleCreatorId = text(bundleInput.creatorId || publisherId, "Bundle creator identity");
         if (bundles.has(bundle.id)) throw new Error("MicroBundle is already loaded: " + bundle.id);
         if (!trustedPublishers.has(publisherId) && publisherId !== creatorId) throw new Error("Publisher is not trusted by this workspace: " + publisherId);
         if (!Array.isArray(bundleInput.providers)) throw new TypeError("MicroBundle must expose its declared provider catalogue.");
