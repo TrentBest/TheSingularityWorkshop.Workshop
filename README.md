@@ -51,7 +51,7 @@ FSMs are assembled from state and transition ingots. Slots represent typed requi
 
 ## Creator's Floor
 
-Explore the [diegetic creator workspace prototype](creator-workspace.html) and the [IDiegeticGUI composition contract](docs/DIEGETIC_GUI_COMPOSITION.md). The prototype demonstrates provider discovery, mounting contributed tool stations, and explicit typed-port connections using local fixture metadata; it does not load executable MicroBundles or invoke FSM_COS.
+Explore the [diegetic creator workspace prototype](creator-workspace.html), the [IDiegeticGUI composition contract](docs/DIEGETIC_GUI_COMPOSITION.md), and the [host-side composition reference core](diegetic-composition.js) with its [acceptance tests](diegetic-composition.tests.html). The reference core validates resolved provider declarations, typed ports, trust, creator-approved connections, provenance, stale proposals, and unload cleanup. It is a JavaScript contract/test surface—not a compiled MicroBundleDomain/FSM_COS adapter—and the floor still uses local fixtures.
 
 ## Hermit
 
