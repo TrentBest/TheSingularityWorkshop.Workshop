@@ -35,14 +35,14 @@ Hermit must not create shadow implementations of Physics, Gestures, or Neural Ne
 
 ## Shell contract
 
-The browser prototype's `hermit-core.js` is a deterministic reference implementation for contract behavior and acceptance tests. Because it executes in an untrusted client, it is **not** a security boundary: production hosts must independently authenticate creators, validate approvals, enforce expiry and one-use semantics, check capabilities at invocation time, and own cancellation and resource limits.
+The browser prototype's `hermit-core.js` is a deterministic reference implementation for contract behavior and acceptance tests. Because it executes in an untrusted client, it is **not** a security boundary: production hosts must independently authenticate creators, validate approvals, enforce expiry and durable one-use/replay protection, check capability identity and version at invocation time, and own cancellation and resource limits. The reference core's in-memory single-use tracking is intentionally not durable.
 
 A shell is a host-owned, versioned boundary, not an arbitrary object graph handed to an assistant.
 
 A shell should expose:
 
 - stable shell and environment identities;
-- a versioned capability catalogue with typed input/output schemas;
+- a versioned capability catalogue with typed input/output schemas; proposals and approvals bind to the exact capability version as well as the shell revision;
 - observations with timestamps, units, provenance, and confidence where applicable;
 - declared limits: mass, reach, workspace, time, compute, and permitted action classes;
 - action invocation results distinct from measured world outcomes;
@@ -141,4 +141,4 @@ Hermit is not considered environment-capable until it can demonstrate:
 9. a deterministic fake-shell test suite covering the safety invariants;
 10. a real Workshop shell integration with Physics and Gestures boundaries respected.
 
-The first visible demo is an invitation into the architecture, not a claim that every production subsystem is already connected.
+The first visible demo is an invitation into the architecture, not a claim that every production subsystem is already connected. Its `physics.*` capability identifiers are fixture placeholders, not APIs currently exported by the Physics repository.
