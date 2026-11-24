@@ -13,7 +13,7 @@ The initial 2D workbench demonstrates two domain studios:
 - **Cosmos Studio** — celestial-body bins, a live orbital system, stellar replacement, planetary worktables, and habitability analysis.
 - **The Forge** — state and transition ingots, typed slots, assembled finite-state machines, and a holodeck for entering and inspecting behavior.
 
-Open [the Workshop prototype](index.html).
+Open [the Workshop prototype](index.html) or explore the [Hermit handling-floor prototype](hermit.html).
 
 ## Core principles
 
@@ -52,6 +52,10 @@ FSMs are assembled from state and transition ingots. Slots represent typed requi
 ## Hermit
 
 Hermit is the creative assistant within Workshop. It can propose unexpected parameter values, conduct bounded experiments, compare outcomes, and explain surprising results. It must preserve provenance, support cancellation and resource limits, and never silently modify the creator's authored baseline.
+
+## Hermit
+
+Hermit is Workshop's creative assistant: it enters bounded environments through host-provided shells, observes available capabilities, proposes inspectable experiments, and explains outcomes without silently changing the creator's baseline. Its shell and experiment architecture is documented in [Hermit](docs/HERMIT.md); the first handling-floor prototype demonstrates the workflow while clearly marking Physics and Gestures adapters as not yet connected.
 
 ## Security boundary
 
