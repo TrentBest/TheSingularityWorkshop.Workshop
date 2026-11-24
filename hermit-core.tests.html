@@ -15,6 +15,7 @@
  test('proposal cannot reference an undeclared capability',()=>throws(()=>HermitCore.propose(shell,{id:'bad',capabilityId:'motor.move',target:'crate'}),'not declared'));
  test('approval is bound to the exact proposal and revision',()=>{const result=HermitCore.authorizeInvocation(shell,proposal,receipt,{clock});if(!result.allowed)throw new Error('not authorized')});
  test('missing approval is denied',()=>throws(()=>HermitCore.authorizeInvocation(shell,proposal,null,{clock}),'required'));
+ test('approval is single-use',()=>{throws(()=>HermitCore.authorizeInvocation(shell,proposal,receipt,{clock}),'consumed')});
  test('approval cannot be replayed for a different action',()=>{const other=HermitCore.propose(shell,{id:'proposal-2',capabilityId:'physics.assess-load',target:'different-crate',parameters:{mass:18},clock});throws(()=>HermitCore.authorizeInvocation(shell,other,receipt,{clock}),'does not match')});
  test('expired approval is denied',()=>{now=1600;throws(()=>HermitCore.authorizeInvocation(shell,proposal,receipt,{clock}),'expired');now=1000});
  test('stale shell revision is denied',()=>{const changed=HermitCore.createShell({id:shell.id,revision:8,capabilities:shell.capabilities});throws(()=>HermitCore.authorizeInvocation(changed,proposal,receipt,{clock}),'Stale')});
