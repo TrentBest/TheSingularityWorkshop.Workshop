@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workshop · Creator's Floor</title>
+<style>
+:root{color-scheme:dark;--bg:#080e18;--panel:#111e30;--line:#2b405b;--ink:#edf4ff;--muted:#9cafc8;--gold:#f2c66d;--cyan:#72d9ef;--green:#8ee0b2;--violet:#b7a0ff;--red:#ff9b9b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#273d5b,#0b1422 50%,var(--bg));color:var(--ink);font:14px/1.5 system-ui,sans-serif}
+header{padding:22px 4vw;border-bottom:1px solid #ffffff18;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.eyebrow{color:var(--gold);font-size:10px;letter-spacing:.18em;text-transform:uppercase}h1{font-size:22px;margin:3px 0}header p{margin:0;color:var(--muted);font-size:12px}a{color:var(--cyan)}
+main{max-width:1500px;margin:auto;padding:22px 3vw 48px}.intro{display:flex;justify-content:space-between;align-items:end;gap:18px;flex-wrap:wrap;margin-bottom:18px}.intro p{color:var(--muted);max-width:760px;margin:5px 0}.status{border:1px solid #f2c66d66;color:var(--gold);border-radius:30px;padding:6px 11px;font-size:11px}
+.layout{display:grid;grid-template-columns:260px minmax(360px,1fr) 300px;gap:13px}.panel{background:linear-gradient(155deg,#17263b,#0f1929);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0}.panel h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0;padding:14px;border-bottom:1px solid #ffffff14}.pad{padding:14px}
+.bundle{border:1px solid #ffffff1c;border-radius:10px;background:#ffffff06;padding:11px;margin-bottom:9px}.bundle strong{display:block}.bundle small{display:block;color:var(--muted);margin:3px 0 8px}.bundle button{width:100%}
+button{font:inherit;color:var(--ink);background:#1b2b41;border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}button:hover{border-color:var(--cyan)}button:disabled{opacity:.4;cursor:not-allowed}
+.floor{min-height:490px;padding:15px;background:radial-gradient(ellipse at center,#203752,#0b1524 72%);position:relative;overflow:hidden}.floor:before{content:"";position:absolute;inset:22px;border:1px dashed #72d9ef30;border-radius:16px;pointer-events:none}.floor-head{position:relative;display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:11px}.stations{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:18px}
+.station{border:1px solid #72d9ef55;border-radius:12px;background:linear-gradient(150deg,#17334a,#101c2c);padding:12px;min-height:165px;box-shadow:0 8px 25px #0004}.station h3{font-size:14px;margin:0 0 4px}.station .source{font-size:10px;color:var(--muted)}.station p{font-size:11px;color:#c0d1e5;min-height:34px}.ports{display:grid;gap:6px;margin-top:8px}.port{font-size:10px;border:1px solid #ffffff25;border-radius:7px;padding:6px 8px;display:flex;justify-content:space-between;gap:8px}.port b{color:var(--cyan);font-weight:600}.port.output b{color:var(--green)}.connect{margin-top:9px;width:100%;font-size:11px}
+.empty{border:1px dashed #ffffff30;border-radius:12px;padding:30px 18px;text-align:center;color:var(--muted);margin-top:18px}.empty strong{display:block;color:var(--ink);margin-bottom:5px}
+.trace{font-size:11px;color:var(--muted);max-height:160px;overflow:auto}.trace p{margin:0 0 8px;padding-bottom:7px;border-bottom:1px solid #ffffff10}
+.connection{border:1px solid #8ee0b255;border-radius:9px;padding:9px;margin:8px 0;background:#10271f;font-size:11px}.connection b{color:var(--green)}
+.choice{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.choice button.active{border-color:var(--gold);color:var(--gold)}.callout{font-size:10px;color:var(--gold);margin-top:12px}
+.footer{color:#8192aa;font-size:11px;margin-top:18px}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.floor{min-height:380px}}
+</style></head>
+<body>
+<header><div><div class="eyebrow">The Singularity Workshop · Creator environment</div><h1>The Creator's Floor</h1><p>Load MicroBundles. Discover their diegetic tools. Compose the Experience you intend to make.</p></div><a href="index.html">← Workshop studios</a></header>
+<main>
+<section class="intro"><div><div class="eyebrow">Workspace / tool composition</div><h2 style="margin:4px 0">Your tools become part of the world.</h2><p>A MicroBundle may contribute an <b>IDiegeticGUI</b> provider. Workshop discovers the contribution, mounts its tool station, and lets you connect compatible domain ports. The host remains in control of composition and permissions.</p></div><span class="status">Prototype · fixture providers only</span></section>
+<div class="layout">
+<aside class="panel"><h2>MicroBundle library</h2><div class="pad" id="library">
+<div class="bundle"><strong>Cosmos</strong><small>Celestial systems · IDiegeticGUI fixture</small><button data-load="cosmos">Load into Workshop</button></div>
+<div class="bundle"><strong>The Forge</strong><small>Finite-state authoring · IDiegeticGUI fixture</small><button data-load="forge">Load into Workshop</button></div>
+<div class="bundle"><strong>Physics</strong><small>Physical assessment · no GUI fixture by default</small><button data-load="physics">Load into Workshop</button></div>
+<div class="bundle"><strong>Gestures</strong><small>Movement intent · IDiegeticGUI fixture</small><button data-load="gestures">Load into Workshop</button></div>
+<div class="bundle"><strong>Hermit</strong><small>Creator companion · Workshop resident</small><button data-load="hermit">Mount Hermit</button></div>
+<div class="callout">These are local teaching fixtures, not real package identities or provider registrations.</div>
+</div></aside>
+<section class="panel"><h2>Diegetic workspace · mounted contributions</h2><div class="floor"><div class="floor-head"><span id="floorState">No contributed stations mounted</span><span>Creator-owned candidate</span></div><div class="stations" id="stations"><div class="empty" id="empty"><strong>Begin with a MicroBundle</strong>Load one from the library. Workshop will inspect its declared providers and mount any diegetic tool contribution.</div></div></div><div class="pad"><b style="font-size:12px">Output being authored</b><div class="choice"><button class="active" data-output="experience">Experience</button><button data-output="microbundle">MicroBundle</button></div><p id="outputNote" style="color:var(--muted);font-size:11px;margin-bottom:0">A complete Experience composition, with pinned MicroBundle identities and prepared state.</p></div></section>
+<aside class="panel"><h2>Workshop · composition authority</h2><div class="pad"><div style="font-size:12px;color:var(--muted)">Provider discovery</div><div id="discovery" style="margin:5px 0 14px">Awaiting bundle load</div><div style="font-size:12px;color:var(--muted)">Creator-approved connections</div><div id="connections"><p style="font-size:11px;color:var(--muted)">No connections yet. Mount two compatible contributions to propose a connection.</p></div><div style="font-size:12px;color:var(--muted);margin-top:16px">Activity trace</div><div class="trace" id="trace"><p>Workshop host ready. No external code has been loaded.</p></div><div class="callout">Discovery is not execution permission. This prototype does not invoke domain operations, FSM_COS, or external services.</div></div></aside>
+</div>
+<p class="footer">Design rule: providers describe typed tools and ports; Workshop renders and governs them. A contribution cannot take over the host, silently connect to another creator's work, or mutate its source bundle's baseline.</p>
+</main>
+<script>
+const definitions={
+ cosmos:{name:"Cosmos Studio",bundle:"Cosmos",provider:true,providerId:"fixture.cosmos.diegetic-gui.v1",description:"Compose celestial bodies and inspect candidate systems.",ports:[["system.input","System definition","in"],["system.analysis","Analysis result","out"]]},
+ forge:{name:"The Forge",bundle:"The Forge",provider:true,providerId:"fixture.forge.diegetic-gui.v1",description:"Assemble typed states, transitions, and executable graphs.",ports:[["fsm.definition","FSM definition","out"],["fsm.preview","Preview request","in"]]},
+ physics:{name:"Physics",bundle:"Physics",provider:false,providerId:null,description:"Domain capability bundle. No diegetic GUI provider declared in this fixture.",ports:[]},
+ gestures:{name:"Gesture Studio",bundle:"Gestures",provider:true,providerId:"fixture.gestures.diegetic-gui.v1",description:"Author timed movement intent and inspect evaluated poses.",ports:[["gesture.intent","Movement intent","out"],["gesture.target","Target mapping","in"]]},
+ hermit:{name:"Hermit",bundle:"Workshop",provider:true,providerId:"workshop.hermit-resident.v1",description:"Persistent creator companion for observation, proposals, and experiments.",ports:[["workspace.observe","Workspace snapshot","in"],["experiment.proposal","Experiment proposal","out"]]}
+};
+const loaded=new Set(),connections=[];let output="experience";
+const $=s=>document.querySelector(s);
+function log(message){const p=document.createElement("p");p.textContent=message;$("#trace").prepend(p)}
+function render(){
+ const stations=$("#stations");stations.innerHTML="";
+ const entries=[...loaded].map(id=>definitions[id]).filter(d=>d.provider);
+ $("#floorState").textContent=entries.length+" diegetic contribution"+(entries.length===1?"":"s")+" mounted";
+ if(!entries.length){stations.innerHTML='<div class="empty"><strong>No diegetic tools discovered</strong>Loaded bundles without an IDiegeticGUI provider remain available as domain capabilities, but contribute no station.</div>'}
+ entries.forEach(d=>{
+  const card=document.createElement("article");card.className="station";
+  const h=document.createElement("h3");h.textContent=d.name;card.append(h);
+  const src=document.createElement("div");src.className="source";src.textContent=d.bundle+" · "+d.providerId;card.append(src);
+  const p=document.createElement("p");p.textContent=d.description;card.append(p);
+  const ports=document.createElement("div");ports.className="ports";
+  d.ports.forEach(port=>{const row=document.createElement("div");row.className="port "+(port[2]==="out"?"output":"");const label=document.createElement("span");label.textContent=port[1];const kind=document.createElement("b");kind.textContent=port[2]==="out"?"OUTPUT":"INPUT";row.append(label,kind);ports.append(row)});
+  card.append(ports);const button=document.createElement("button");button.className="connect";button.textContent="Propose compatible connection";button.onclick=()=>proposeConnection(d);card.append(button);stations.append(card);
+ });
+ renderConnections();
+}
+function renderConnections(){const el=$("#connections");el.innerHTML="";if(!connections.length){el.innerHTML='<p style="font-size:11px;color:var(--muted)">No connections yet. Mount two compatible contributions to propose a connection.</p>';return}
+ connections.forEach(c=>{const div=document.createElement("div");div.className="connection";const b=document.createElement("b");b.textContent="Creator approved";const p=document.createElement("div");p.textContent=c;div.append(b,p);el.append(div)})}
+function proposeConnection(source){
+ const target=[...loaded].map(id=>definitions[id]).find(d=>d.provider&&d.name!==source.name&&source.ports.some(p=>p[2]==="out")&&d.ports.some(p=>p[2]==="in"));
+ if(!target){log("No compatible mounted input endpoint found for "+source.name+".");$("#discovery").textContent="Connection unavailable: load a compatible receiving tool.";return}
+ const out=source.ports.find(p=>p[2]==="out"),input=target.ports.find(p=>p[2]==="in");
+ if(!confirm("Connect "+source.name+" / "+out[1]+" → "+target.name+" / "+input[1]+"? This is a creator-approved fixture connection.")){log("Creator declined proposed connection.");return}
+ const connection=source.name+" · "+out[0]+" → "+target.name+" · "+input[0];if(!connections.includes(connection))connections.push(connection);
+ log("Creator approved candidate connection: "+connection);renderConnections();
+}
+function load(id){
+ if(loaded.has(id)){log(definitions[id].bundle+" is already present in this composition.");return}
+ loaded.add(id);const d=definitions[id];
+ if(d.provider){$("#discovery").textContent="Found IDiegeticGUI contribution: "+d.providerId;log("Resolved "+d.bundle+" fixture; discovered "+d.providerId+"; mounted "+d.name+".")}
+ else{$("#discovery").textContent=d.bundle+" loaded; no IDiegeticGUI provider declared.";log("Loaded "+d.bundle+" fixture. Domain capability only; no diegetic station to mount.")}
+ render();
+}
+document.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>load(b.dataset.load));
+document.querySelectorAll("[data-output]").forEach(b=>b.onclick=()=>{output=b.dataset.output;document.querySelectorAll("[data-output]").forEach(x=>x.classList.toggle("active",x===b));$("#outputNote").textContent=output==="experience"?"A complete Experience composition, with pinned MicroBundle identities and prepared state.":"A reusable MicroBundle contribution with declared capabilities, providers, and configuration.";log("Creator selected output target: "+output+".")});
+</script></body></html>
