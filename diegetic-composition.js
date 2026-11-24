@@ -61,7 +61,7 @@
     });
     return freeze({
       provider: { id: provider.id, contractVersion: provider.contractVersion },
-      source: { id: bundle.id, version: bundle.version, publisherId: bundle.publisherId },
+      source: { id: bundle.id, version: bundle.version, publisherId: bundle.publisherId, creatorId: bundle.creatorId },
       tools
     });
   }
@@ -103,7 +103,7 @@
       },
       loadBundle(bundleInput) {
         const bundle = identity(bundleInput, "MicroBundle");
-        const publisherId = text(bundleInput.publisherId, "Publisher identity");
+        const publisherId = text(bundleInput.publisherId, "Publisher identity");\n        const bundleCreatorId = text(bundleInput.creatorId || publisherId, "Bundle creator identity");
         if (bundles.has(bundle.id)) throw new Error("MicroBundle is already loaded: " + bundle.id);
         if (!trustedPublishers.has(publisherId) && publisherId !== creatorId) throw new Error("Publisher is not trusted by this workspace: " + publisherId);
         if (!Array.isArray(bundleInput.providers)) throw new TypeError("MicroBundle must expose its declared provider catalogue.");
@@ -114,7 +114,7 @@
           const resolved = options.resolveProvider(bundleInput, { id: providerId, contractVersion });
           if (!resolved) throw new Error("Declared provider could not be resolved: " + providerId);
           if (resolved.id !== providerId || resolved.contractVersion !== contractVersion) throw new Error("Resolved provider identity/version does not match its declaration: " + providerId);
-          const contribution = validateContribution(resolved.contribution, { id: bundle.id, version: bundle.version, publisherId }, { id: providerId, contractVersion });
+          const contribution = validateContribution(resolved.contribution, { id: bundle.id, version: bundle.version, publisherId, creatorId: bundleCreatorId }, { id: providerId, contractVersion });
           contribution.tools.forEach(tool => tool.requiredCapabilities.forEach(capability => {
             if (!grantedCapabilities.has(capability)) throw new Error("Required capability is not granted: " + capability);
           }));
