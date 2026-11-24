@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hermit core tests</title>
+<style>body{font:15px/1.5 system-ui;background:#0b1220;color:#edf4ff;max-width:900px;margin:40px auto;padding:0 20px}h1{color:#f2c66d}li{padding:7px 0;border-bottom:1px solid #ffffff18}.pass{color:#8ee0b2}.fail{color:#ff9b9b}code{color:#72d9ef}</style></head>
+<body><h1>Hermit deterministic core · acceptance tests</h1><p>Browser-only tests. No network, storage, model provider, or domain adapter is used.</p><p id="summary">Running…</p><ol id="results"></ol>
+<script src="hermit-core.js"></script><script>
+(function(){
+ const results=document.getElementById('results'),summary=document.getElementById('summary');let passed=0,failed=0;
+ function test(name,fn){const li=document.createElement('li');try{fn();li.className='pass';li.textContent='PASS · '+name;passed++}catch(e){li.className='fail';li.textContent='FAIL · '+name+' — '+e.message;failed++}results.append(li)}
+ function throws(fn,part){let caught=false;try{fn()}catch(e){caught=true;if(part&&!e.message.includes(part))throw new Error('Expected "'+part+'", got "'+e.message+'"')}if(!caught)throw new Error('Expected operation to be rejected')}
+ let now=1000;const clock=()=>now;
+ const shell=HermitCore.createShell({id:'handling-floor',revision:7,capabilities:[{id:'physics.assess-load',version:'1',approvalRequired:true}],observations:[]});
+ const proposal=HermitCore.propose(shell,{id:'proposal-1',capabilityId:'physics.assess-load',target:'crate-18kg',parameters:{mass:18,unit:'kg'},clock});
+ const receipt=HermitCore.approve(shell,proposal,'creator-1',{clock,ttlMs:500});
+ test('shell rejects duplicate capability identities',()=>throws(()=>HermitCore.createShell({id:'x',capabilities:[{id:'a'},{id:'a'}]}),'Duplicate'));
+ test('proposal cannot reference an undeclared capability',()=>throws(()=>HermitCore.propose(shell,{id:'bad',capabilityId:'motor.move',target:'crate'}),'not declared'));
+ test('approval is bound to the exact proposal and revision',()=>{const result=HermitCore.authorizeInvocation(shell,proposal,receipt,{clock});if(!result.allowed)throw new Error('not authorized')});
+ test('missing approval is denied',()=>throws(()=>HermitCore.authorizeInvocation(shell,proposal,null,{clock}),'required'));
+ test('approval cannot be replayed for a different action',()=>{const other=HermitCore.propose(shell,{id:'proposal-2',capabilityId:'physics.assess-load',target:'different-crate',parameters:{mass:18},clock});throws(()=>HermitCore.authorizeInvocation(shell,other,receipt,{clock}),'does not match')});
+ test('expired approval is denied',()=>{now=1600;throws(()=>HermitCore.authorizeInvocation(shell,proposal,receipt,{clock}),'expired');now=1000});
+ test('stale shell revision is denied',()=>{const changed=HermitCore.createShell({id:shell.id,revision:8,capabilities:shell.capabilities});throws(()=>HermitCore.authorizeInvocation(changed,proposal,receipt,{clock}),'Stale')});
+ test('observations carry shell revision and provenance',()=>{const o=HermitCore.observe(shell,{kind:'mass',value:18,unit:'kg',provenance:'fixture:crate-18kg'},clock);if(o.shellRevision!==7||o.provenance!=='fixture:crate-18kg'||o.observedAt!==1000)throw new Error('observation metadata missing')});
+ test('cancellation token stops subsequent work',()=>{const token=HermitCore.createCancellationToken();token.cancel('host stop');if(!token.cancelled)throw new Error('not cancelled');throws(()=>token.throwIfCancelled(),'host stop')});
+ test('resource budget rejects over-consumption',()=>{const budget=HermitCore.createBudget({units:3});budget.consume(2);if(budget.remaining!==1)throw new Error('wrong remainder');throws(()=>budget.consume(2),'exhausted')});
+ test('resource budget rejects invalid costs',()=>throws(()=>HermitCore.createBudget({units:2}).consume(-1),'non-negative'));
+ summary.textContent=passed+' passed · '+failed+' failed';summary.className=failed?'fail':'pass';
+})();
+</script></body></html>
