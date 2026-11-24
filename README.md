@@ -49,6 +49,10 @@ The displayed scale is a visualization choice, not a claim that every astronomic
 
 FSMs are assembled from state and transition ingots. Slots represent typed requirements: text, references to other parts, conditions, actions, or domain-defined values. The assembled graph is inspectable, and the holodeck provides an execution-oriented view in which users can enter and observe states and transitions.
 
+## Creator's Floor
+
+Explore the [diegetic creator workspace prototype](creator-workspace.html) and the [IDiegeticGUI composition contract](docs/DIEGETIC_GUI_COMPOSITION.md). The prototype demonstrates provider discovery, mounting contributed tool stations, and explicit typed-port connections using local fixture metadata; it does not load executable MicroBundles or invoke FSM_COS.
+
 ## Hermit
 
 Hermit is Workshop's creative assistant: it enters bounded environments through host-provided shells, observes available capabilities, proposes inspectable experiments, and explains outcomes without silently changing the creator's baseline.
