@@ -70,6 +70,7 @@
     options = options || {};
     const workspaceId = text(options.workspaceId, "Workspace identity");
     const creatorId = text(options.creatorId, "Creator identity");
+    const workspaceCreatorId = creatorId;
     if (typeof options.resolveProvider !== "function") throw new TypeError("The host must supply a trusted provider resolver.");
     const trustedPublishers = new Set((options.trustedPublishers || []).map(x => text(x, "Trusted publisher")));
     const trustedCreators = new Set((options.trustedCreators || []).map(x => text(x, "Trusted creator")));
@@ -168,8 +169,8 @@
       },
       rejectConnection(proposal, creatorId) {
         requireCurrent(proposal);
-        if (text(creatorId, "Rejecting creator") !== creatorId || creatorId !== arguments[1]) throw new Error("Creator identity is required.");
-        if (creatorId !== options.creatorId) throw new Error("Only the workspace creator can reject this connection.");
+        if (text(creatorId, "Rejecting creator") !== creatorId) throw new Error("Creator identity is required.");
+        if (creatorId !== options.creatorId && creatorId !== workspaceCreatorId) throw new Error("Only the workspace creator can reject this connection.");
         proposals.delete(proposal.id);
         return true;
       },
