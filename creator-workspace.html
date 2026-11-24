@@ -133,4 +133,4 @@ function unloadBundle(bundleId){
 document.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>load(b.dataset.load));
 document.querySelectorAll("[data-output]").forEach(b=>b.onclick=()=>{output=b.dataset.output;document.querySelectorAll("[data-output]").forEach(x=>x.classList.toggle("active",x===b));$("#outputNote").textContent=output==="experience"?"A complete Experience composition, with pinned MicroBundle identities and prepared state.":"A reusable MicroBundle contribution with declared capabilities, providers, and configuration.";log("Creator selected output target: "+output+".")});
 render();
-</script></body></html></body></html>
+</script></body></html>
