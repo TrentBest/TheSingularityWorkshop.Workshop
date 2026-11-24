@@ -170,7 +170,7 @@
       rejectConnection(proposal, creatorId) {
         requireCurrent(proposal);
         if (text(creatorId, "Rejecting creator") !== creatorId) throw new Error("Creator identity is required.");
-        if (creatorId !== options.creatorId && creatorId !== workspaceCreatorId) throw new Error("Only the workspace creator can reject this connection.");
+        if (creatorId !== workspaceCreatorId) throw new Error("Only the workspace creator can reject this connection.");
         proposals.delete(proposal.id);
         return true;
       },
