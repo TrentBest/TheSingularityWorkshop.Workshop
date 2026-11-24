@@ -91,6 +91,10 @@ Mini Hermits and Titan Hermits are manifestations of actual bounded work, not se
 
 The visual workforce must be tied to real task records, progress, and evidence. It should never claim a MicroBundle was built, validated, or loaded merely because an animation played. GOAP is a suitable direction for routine task choreography; LLM reasoning should be reserved for ambiguity, planning, and explanations where it adds value.
 
-## Prototype boundary
+## Prototype and reference-core boundary
 
-[`creator-workspace.html`](../creator-workspace.html) is an interaction study. It uses local fixture metadata to demonstrate loading a bundle card, discovering a declared diegetic GUI contribution, mounting a tool station, connecting compatible ports, and choosing an output target. It does not load a real MicroBundle, call FSM_COS, instantiate `IDiegeticGUI`, execute domain operations, persist a composition, or publish artifacts.
+[`creator-workspace.html`](../creator-workspace.html) is an interaction study. It uses local fixture metadata to demonstrate loading a bundle card, discovering a declared diegetic GUI contribution, mounting a tool station, connecting ports, and choosing an output target. It does not load a real MicroBundle, call FSM_COS, instantiate `IDiegeticGUI`, execute domain operations, persist a composition, or publish artifacts.
+
+[`diegetic-composition.js`](../diegetic-composition.js) is a host-side JavaScript reference core. It accepts already-resolved bundle descriptors and a host-supplied provider resolver; it does not fetch bundles, execute provider-supplied UI code, or implement the missing .NET provider contract. It validates opaque provider identity/version, publisher trust, required host capability grants, stable tool/port identities, typed port schema compatibility, cross-creator trust, exact creator approval, revision-bound proposals, provenance, and unload cleanup. Its deterministic browser acceptance suite is [`diegetic-composition.tests.html`](../diegetic-composition.tests.html).
+
+This is executable reference behavior and a testable contract shape, not a production security boundary. A production host must enforce trust, capability grants, isolation, quotas, cancellation, and lifecycle in its own trusted process. The actual MicroBundleDomain provider declaration/resolution seam and FSM_COS integration remain unimplemented and must be agreed with their owners before a compiled adapter can be claimed.
