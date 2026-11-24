@@ -14,6 +14,7 @@
  test('shell rejects duplicate capability identities',()=>throws(()=>HermitCore.createShell({id:'x',capabilities:[{id:'a'},{id:'a'}]}),'Duplicate'));
  test('proposal cannot reference an undeclared capability',()=>throws(()=>HermitCore.propose(shell,{id:'bad',capabilityId:'motor.move',target:'crate'}),'not declared'));
  test('approval is bound to the exact proposal and revision',()=>{const result=HermitCore.authorizeInvocation(shell,proposal,receipt,{clock});if(!result.allowed)throw new Error('not authorized')});
+ test('capability version changes invalidate a proposal',()=>{const changed=HermitCore.createShell({id:shell.id,revision:shell.revision,capabilities:[{id:'physics.assess-load',version:'2',approvalRequired:true}]});throws(()=>HermitCore.authorizeInvocation(changed,proposal,receipt,{clock}),'version changed')});
  test('missing approval is denied',()=>throws(()=>HermitCore.authorizeInvocation(shell,proposal,null,{clock}),'required'));
  test('approval is single-use',()=>{throws(()=>HermitCore.authorizeInvocation(shell,proposal,receipt,{clock}),'consumed')});
  test('approval cannot be replayed for a different action',()=>{const other=HermitCore.propose(shell,{id:'proposal-2',capabilityId:'physics.assess-load',target:'different-crate',parameters:{mass:18},clock});throws(()=>HermitCore.authorizeInvocation(shell,other,receipt,{clock}),'does not match')});
