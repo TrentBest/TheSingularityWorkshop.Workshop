@@ -137,8 +137,6 @@
         const source = endpoint(text(input.sourceStationId, "Source station"), text(input.sourcePortId, "Source port"), "output");
         const target = endpoint(text(input.targetStationId, "Target station"), text(input.targetPortId, "Target port"), "input");
         if (!same(source.port.schema, target.port.schema)) throw new Error("Port schemas are incompatible: " + source.port.schema.id + "@" + source.port.schema.version + " != " + target.port.schema.id + "@" + target.port.schema.version);
-        const sourcePublisher = source.station.source.publisherId;
-        const targetPublisher = target.station.source.publisherId;
         if (sourcePublisher !== targetPublisher && !trustedCreators.has(targetPublisher) && !trustedCreators.has(sourcePublisher)) {
           throw new Error("Cross-publisher connection is not covered by workspace trust policy.");
         }
