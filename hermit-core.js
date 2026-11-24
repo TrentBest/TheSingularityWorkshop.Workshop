@@ -58,6 +58,7 @@
     if (!capability) throw new Error("Capability is not declared by this shell: " + capabilityId);
     const action = Object.freeze({
       capabilityId,
+      capabilityVersion: capability.version,
       target: requireText(input.target, "Action target"),
       parameters: Object.freeze(clone(input.parameters || {}))
     });
@@ -86,7 +87,6 @@
       creatorId: requireText(creatorId, "Creator identity"),
       approvedAt: now,
       expiresAt: now + ttlMs,
-      consumed: false
     });
   }
 
@@ -103,6 +103,7 @@
     assertCurrent(shell, proposal);
     const capability = shell.capabilities.find(item => item.id === proposal.action.capabilityId);
     if (!capability) throw new Error("Capability is no longer declared.");
+    if (capability.version !== proposal.action.capabilityVersion) throw new Error("Capability version changed after proposal.");
     if (!capability.approvalRequired) return Object.freeze({ allowed: true, reason: "capability-policy", proposalId: proposal.id });
     if (!receipt) throw new Error("Creator approval is required.");
     const now = (options.clock || Date.now)();
