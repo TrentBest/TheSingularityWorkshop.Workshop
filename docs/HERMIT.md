@@ -35,6 +35,8 @@ Hermit must not create shadow implementations of Physics, Gestures, or Neural Ne
 
 ## Shell contract
 
+The browser prototype's `hermit-core.js` is a deterministic reference implementation for contract behavior and acceptance tests. Because it executes in an untrusted client, it is **not** a security boundary: production hosts must independently authenticate creators, validate approvals, enforce expiry and one-use semantics, check capabilities at invocation time, and own cancellation and resource limits.
+
 A shell is a host-owned, versioned boundary, not an arbitrary object graph handed to an assistant.
 
 A shell should expose:
@@ -95,10 +97,13 @@ The demonstration uses transparent illustrative rules so the interaction can be 
 
 ### 1. Deterministic core
 
+- [x] Initial browser reference core: versioned shell identity, declared capability checks, provenance-stamped observations, revision-bound proposals, action-bound expiring single-use approval receipts, cancellation tokens, and bounded resource budgets (`hermit-core.js`).
+- [x] Browser acceptance harness covering duplicate capabilities, undeclared capabilities, missing/stale/mismatched/expired/replayed approval, observation provenance, cancellation, and resource-budget enforcement (`hermit-core.tests.html`).
+- [ ] Trusted host implementation of these contracts; the browser reference is not a security boundary.
 - typed shell, capability, observation, goal, proposal, experiment, and outcome contracts;
 - deterministic fake shell and planner for tests;
 - policy gate, approval boundary, cancellation, timeout, quotas, bounded output, and trace provenance;
-- tests for denial, stale revisions, cancellation, limits, malformed outputs, and baseline preservation.
+- tests for denial, stale revisions, cancellation, limits, malformed outputs, and baseline preservation. The current browser suite covers the first set of reference-core invariants; host-side tests remain required.
 
 ### 2. Workshop shell
 
