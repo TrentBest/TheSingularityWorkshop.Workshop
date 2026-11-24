@@ -51,11 +51,13 @@ FSMs are assembled from state and transition ingots. Slots represent typed requi
 
 ## Hermit
 
-Hermit is the creative assistant within Workshop. It can propose unexpected parameter values, conduct bounded experiments, compare outcomes, and explain surprising results. It must preserve provenance, support cancellation and resource limits, and never silently modify the creator's authored baseline.
+Hermit is Workshop's creative assistant: it enters bounded environments through host-provided shells, observes available capabilities, proposes inspectable experiments, and explains outcomes without silently changing the creator's baseline.
 
-## Hermit
+- [Hermit architecture and safety contract](docs/HERMIT.md)
+- [Handling-floor prototype](hermit.html)
+- [Deterministic core acceptance tests](hermit-core.tests.html)
 
-Hermit is Workshop's creative assistant: it enters bounded environments through host-provided shells, observes available capabilities, proposes inspectable experiments, and explains outcomes without silently changing the creator's baseline. Its shell and experiment architecture is documented in [Hermit](docs/HERMIT.md); the first handling-floor prototype demonstrates the workflow while clearly marking Physics and Gestures adapters as not yet connected.
+The browser core is a reference implementation and test surface—not a trusted security boundary. Production authorization, cancellation, quotas, and invocation must be enforced by the host. Physics and Gestures adapters are not yet connected.
 
 ## Security boundary
 
