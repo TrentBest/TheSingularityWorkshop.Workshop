@@ -96,6 +96,8 @@
     if (canonical(proposal.action) !== proposal.actionFingerprint) throw new Error("Proposal action was modified.");
   }
 
+  const consumedReceipts = new WeakSet();
+
   function authorizeInvocation(shell, proposal, receipt, options) {
     options = options || {};
     assertCurrent(shell, proposal);
@@ -110,7 +112,8 @@
       throw new Error("Approval does not match this exact action and shell revision.");
     }
     if (!Number.isFinite(receipt.expiresAt) || now > receipt.expiresAt) throw new Error("Approval has expired.");
-    if (receipt.consumed) throw new Error("Approval has already been consumed.");
+    if (consumedReceipts.has(receipt)) throw new Error("Approval has already been consumed.");
+    consumedReceipts.add(receipt);
     return Object.freeze({ allowed: true, reason: "creator-approved", proposalId: proposal.id, actionFingerprint: proposal.actionFingerprint });
   }
 
