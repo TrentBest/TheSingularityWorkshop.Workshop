@@ -15,6 +15,14 @@ The initial 2D workbench demonstrates two domain studios:
 
 Explore the [Workshop Pages experience](https://trentbest.github.io/TheSingularityWorkshop.Workshop/) or open its [source prototype](index.html); the [Hermit handling-floor prototype](hermit.html) is also available. The Pages workflow builds on `development` and delegates deployment to the pinned CiAi reusable workflow; first-publication verification is pending.
 
+
+## Companion experiences
+
+- **[Hermit — Persistent creative companion](https://trentbest.github.io/TheSingularityWorkshop.Hermit/)** — bounded planning, capability discovery, host policy, and the embodied learning playground.
+- **[NeuralNetworks — Inspectable computation](https://trentbest.github.io/TheSingularityWorkshop.FSM_NeuralNetworks/)** — a hand-checkable Dense + ReLU lesson and the GPU-first neural architecture.
+
+Both companion sites build from their own development branches and delegate Pages deployment to the pinned CiAi reusable workflow. Their first successful public deployment is still being verified.
+
 ## Core principles
 
 1. **Domain-first tools.** A tool's meaning and operations are independent of whether it is rendered on desktop, in a 2D panel, or in VR.
