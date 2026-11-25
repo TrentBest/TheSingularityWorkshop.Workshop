@@ -103,6 +103,27 @@ test("missing approval is denied", () => {
   assert.throws(() => authorizeInvocation(shell, proposal, null, { clock }), /required/);
 });
 
+test("look-alike shells and proposals are rejected", () => {
+  const { shell, proposal } = fixture();
+  const receipt = approve(shell, proposal, "creator-1", { clock });
+  assert.throws(() => authorizeInvocation({ ...shell }, proposal, receipt, { clock }), /Shell was not issued/);
+  assert.throws(() => authorizeInvocation(shell, { ...proposal }, receipt, { clock }), /Proposal was not issued/);
+});
+
+test("look-alike approval receipts are rejected", () => {
+  const { shell, proposal } = fixture();
+  const receipt = approve(shell, proposal, "creator-1", { clock });
+  assert.throws(() => authorizeInvocation(shell, proposal, { ...receipt }, { clock }), /receipt was not issued/);
+});
+
+test("approval expires at its exact expiry timestamp", () => {
+  const { shell, proposal } = fixture();
+  const receipt = approve(shell, proposal, "creator-1", { clock, ttlMs: 500 });
+  now = 1500;
+  assert.throws(() => authorizeInvocation(shell, proposal, receipt, { clock }), /expired/);
+  now = 1000;
+});
+
 test("approval is single-use", () => {
   const { shell, proposal } = fixture();
   const receipt = approve(shell, proposal, "creator-1", { clock });
