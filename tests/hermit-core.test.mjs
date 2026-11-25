@@ -66,6 +66,17 @@ test("shell rejects duplicate capability identities", () => {
   }), /Duplicate capability/);
 });
 
+test("observations and proposals reject fabricated shell objects", () => {
+  const { shell } = fixture();
+  const lookAlike = { ...shell };
+  assert.throws(() => observe(lookAlike, {
+    kind: "pose", value: {}, provenance: "fixture"
+  }, clock), /issued by this Hermit core/);
+  assert.throws(() => propose(lookAlike, {
+    id: "fabricated", capabilityId: "physics.assess-load", target: "crate"
+  }), /issued by this Hermit core/);
+});
+
 test("proposal cannot reference an undeclared capability", () => {
   const { shell } = fixture();
   assert.throws(() => propose(shell, {
