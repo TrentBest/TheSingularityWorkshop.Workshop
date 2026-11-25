@@ -1,0 +1,90 @@
+name: Build and deploy Workshop experiences
+
+on:
+  push:
+    branches: [development]
+  pull_request:
+    branches: [development]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workshop-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Verify and assemble the Workshop experiences
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out development
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # pinned commit SHA
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # pinned commit SHA
+        with:
+          node-version: 22
+
+      - name: Verify entry points and local page references
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in index.html hermit.html creator-workspace.html diegetic-composition.js hermit-core.js diegetic-composition.tests.html hermit-core.tests.html; do
+            test -s "$file"
+          done
+          test -s docs/DIEGETIC_GUI_COMPOSITION.md
+          test -s docs/HERMIT.md
+          test -s docs/HERMIT_INTEGRATION.md
+          node --input-type=module <<'NODE'
+          import { existsSync, readdirSync } from 'node:fs';
+          import { dirname, resolve } from 'node:path';
+          const pages = readdirSync('.').filter(name => name.endsWith('.html'));
+          const ignored = /^(https?:|mailto:|tel:|data:|javascript:|#)/i;
+          const missing = [];
+          for (const page of pages) {
+            const html = await (await import('node:fs/promises')).readFile(page, 'utf8');
+            for (const match of html.matchAll(/(?:href|src)=["']([^"']+)["']/g)) {
+              const raw = match[1];
+              if (ignored.test(raw)) continue;
+              const local = decodeURIComponent(raw.split(/[?#]/, 1)[0]);
+              if (!local) continue;
+              if (!existsSync(resolve(dirname(page), local))) missing.push(page + ' -> ' + raw);
+            }
+          }
+          if (missing.length) {
+            console.error('Missing local page references:\n' + missing.join('\n'));
+            process.exit(1);
+          }
+          console.log('Verified local references across ' + pages.length + ' HTML pages.');
+          NODE
+
+      - name: Assemble the static Workshop site
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          find . -maxdepth 1 -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' -o -name '*.json' \) -exec cp {} _site/ \;
+          if [[ -d docs ]]; then cp -R docs _site/docs; fi
+          if [[ -d assets ]]; then cp -R assets _site/assets; fi
+          touch _site/.nojekyll
+          test -s _site/index.html
+          test -s _site/hermit.html
+          test -s _site/creator-workspace.html
+          test -s _site/diegetic-composition.js
+          test -s _site/hermit-core.js
+          test -s _site/docs/DIEGETIC_GUI_COMPOSITION.md
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # pinned commit SHA
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    uses: TrentBest/TheSingularityWorkshop.CiAi/.github/workflows/deploy-pages.yml@5083c452b555d7645dd0c8ab01d76008026da436
