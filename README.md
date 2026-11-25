@@ -13,7 +13,7 @@ The initial 2D workbench demonstrates two domain studios:
 - **Cosmos Studio** — celestial-body bins, a live orbital system, stellar replacement, planetary worktables, and habitability analysis.
 - **The Forge** — state and transition ingots, typed slots, assembled finite-state machines, and a holodeck for entering and inspecting behavior.
 
-Open [the Workshop prototype](index.html) or explore the [Hermit handling-floor prototype](hermit.html).
+Explore the [Workshop Pages experience](https://trentbest.github.io/TheSingularityWorkshop.Workshop/) or open its [source prototype](index.html); the [Hermit handling-floor prototype](hermit.html) is also available. The Pages workflow builds on `development` and delegates deployment to the pinned CiAi reusable workflow; first-publication verification is pending.
 
 ## Core principles
 
