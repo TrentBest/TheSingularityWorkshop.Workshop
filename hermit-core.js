@@ -25,6 +25,12 @@
     return value.trim();
   }
 
+  function readTime(clock, label) {
+    const value = (clock || Date.now)();
+    if (!Number.isFinite(value)) throw new TypeError(label + " must be finite.");
+    return value;
+  }
+
   const issuedShells = new WeakSet();
   const issuedProposals = new WeakSet();
   const issuedReceipts = new WeakSet();
@@ -41,9 +47,13 @@
       ids.add(id);
       return Object.freeze({ id, version: requireText(cap.version === undefined ? "1" : cap.version, "Capability version"), approvalRequired: cap.approvalRequired !== false });
     });
+    if (!Number.isSafeInteger(input.revision === undefined ? 0 : input.revision) ||
+        (input.revision === undefined ? 0 : input.revision) < 0) {
+      throw new TypeError("Shell revision must be a non-negative safe integer.");
+    }
     const shell = Object.freeze({
       id: requireText(input.id, "Shell id"),
-      revision: Number.isSafeInteger(input.revision) && input.revision >= 0 ? input.revision : 0,
+      revision: input.revision === undefined ? 0 : input.revision,
       capabilities: Object.freeze(capabilities),
       observations: deepFreeze(clone(input.observations || [])),
       limits: deepFreeze(clone(input.limits || {}))
@@ -58,7 +68,7 @@
     return Object.freeze({
       shellId: shell.id,
       shellRevision: shell.revision,
-      observedAt: (clock || Date.now)(),
+      observedAt: readTime(clock, "Observation timestamp"),
       kind: requireText(observation.kind, "Observation kind"),
       value: deepFreeze(clone(observation.value)),
       unit: observation.unit || null,
@@ -86,7 +96,7 @@
       action,
       actionFingerprint: canonical(action),
       approvalRequired: capability.approvalRequired,
-      createdAt: (input.clock || Date.now)()
+      createdAt: readTime(input.clock, "Proposal timestamp")
     });
     issuedProposals.add(proposal);
     proposalShells.set(proposal, shell);
@@ -95,8 +105,9 @@
 
   function approve(shell, proposal, creatorId, options) {
     options = options || {};
-    const now = (options.clock || Date.now)();
-    const ttlMs = Number.isFinite(options.ttlMs) && options.ttlMs > 0 ? options.ttlMs : 60000;
+    const now = readTime(options.clock, "Approval timestamp");
+    const ttlMs = options.ttlMs === undefined ? 60000 : options.ttlMs;
+    if (!Number.isFinite(ttlMs) || ttlMs <= 0) throw new TypeError("Approval TTL must be a positive finite number.");
     assertCurrent(shell, proposal);
     if (!proposal.approvalRequired) throw new Error("This proposal does not require creator approval.");
     const receipt = Object.freeze({
@@ -134,7 +145,7 @@
     if (!receipt) throw new Error("Creator approval is required.");
     if (typeof receipt !== "object" || !issuedReceipts.has(receipt)) throw new Error("Approval receipt was not issued by this Hermit core.");
     if (receiptProposals.get(receipt) !== proposal) throw new Error("Approval was issued for a different proposal instance.");
-    const now = (options.clock || Date.now)();
+    const now = readTime(options.clock, "Authorization timestamp");
     if (receipt.proposalId !== proposal.id || receipt.shellId !== shell.id ||
         receipt.shellRevision !== shell.revision ||
         receipt.actionFingerprint !== proposal.actionFingerprint) {
