@@ -13,7 +13,7 @@ function fixture() {
     capabilities: [{ id: "physics.assess-load", version: "1", approvalRequired: true }]
   });
   const proposal = propose(shell, {
-    id: "proposal-" + Math.random().toString(36).slice(2),
+    id: "proposal-fixture",
     capabilityId: "physics.assess-load",
     target: "crate-18kg",
     parameters: { mass: 18, unit: "kg" },
