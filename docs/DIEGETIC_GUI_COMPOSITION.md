@@ -62,6 +62,25 @@ Provider discovery is not execution authorization. A provider being present does
 
 Do not execute provider-supplied HTML/JavaScript as an implicit UI contract. Providers describe typed tools and operations; the host renders them. Any future extension mechanism for custom presentation code must be separately sandboxed, permissioned, versioned, and audited.
 
+## Diegetic unload and departure choreography
+
+Package unload is a real host lifecycle transition first and a presentation opportunity second. The host must not leave a package executable merely so Hermit can finish a scene.
+
+The intended sequence is:
+
+1. **Quiesce:** the host marks the exact package identity/version as unloading, rejects new invocations, and detaches its input routes.
+2. **Revoke and drain:** the host revokes package-scoped capabilities, cancels outstanding work, and waits for or terminates in-flight operations according to the package's bounded shutdown contract.
+3. **Capture a presentation proxy:** before disposing the provider, the host captures only the approved, non-executable visual description needed for a departure vignette—such as the diegetic GUI's silhouette, scale, theme, and safe interaction bounds. This proxy is not a live provider and exposes no package capabilities.
+4. **Dispose:** the host disposes provider sessions and unloads the package through the actual FSM_COS lifecycle. Resource release and unload success are determined by the host, never by animation.
+5. **Stage the departure:** Hermit may choose a permitted vignette from the host's presentation catalogue. The titan may stomp a detached menu proxy; minis may rig and tow it through a pocket doorway; or a deliberately over-the-top cartoon demolition effect may clear it away. The scene is presentation-only and cannot call back into the unloaded package.
+6. **Reconcile:** the host records the actual unload result independently of the vignette result. If presentation fails, is skipped, or is cancelled, package unload remains complete and the visual proxy is simply discarded.
+
+Hermit's freedom belongs in **selection and choreography**, not lifecycle authority. The host supplies the available presentation actors/effects, spatial bounds, time/resource budget, cancellation, and policy constraints. Hermit can compose those ingredients creatively, including choosing a quiet exit or no scene at all. A creator preference may tune tone, intensity, and duration; it must not silently grant new package permissions.
+
+The C4-style gag is a cartoon VFX treatment of a disposable interface proxy—not a physical explosive simulation, a real-world instruction, or destruction of the package's data. Any actual data retention/deletion, filesystem changes, capability revocation, and runtime disposal remain explicit host operations with their own audit evidence.
+
+This keeps the diegetic world expressive without making an animation the source of truth: a package is already unavailable before its farewell begins, and the host can prove whether it was actually unloaded.
+
 ## How this relates to current composition contracts
 
 The current Workshop integration study records the verified MicroBundleDomain surfaces: descriptor/provider identity, `IMicroBundle`, load context, arbitration context, definitions, fields, and stable parameter IDs. Provider IDs are opaque. Current Workshop has no compiled .NET adapter, and the existing HTML is a prototype.
