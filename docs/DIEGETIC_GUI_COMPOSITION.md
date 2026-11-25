@@ -98,6 +98,14 @@ The practical integration sequence is:
 7. Generate either a MicroBundle or Experience composition from the validated candidate.
 8. Test missing providers, incompatible versions, duplicate identities, untrusted bundles, malformed schemas, denied capabilities, cancellation, unload, and baseline preservation.
 
+### Reference-core authorization boundary
+
+The JavaScript reference core now tracks shells, proposals, and approval receipts by object identity. An approval is bound to the exact shell snapshot and exact proposal instance that produced it; look-alike objects, transferred receipts, expired receipts, and replayed receipts are rejected. This is useful deterministic reference behavior and prevents accidental provenance substitution inside the core.
+
+It is **not creator authentication or a production security boundary**. The `creatorId` passed to `approve` is an identity assertion supplied by its caller. A production Workshop host must authenticate the creator and verify that the creator is authorized for the exact workspace/action before it calls the approval operation. Provider code must never be allowed to mint creator approvals. The host must then enforce the returned authorization at the capability invocation boundary.
+
+The in-memory receipt is intentionally tied to this core instance and is not a portable proof. A distributed or persistent approval flow needs host-issued, integrity-protected receipts (or authoritative server-side approval state), with audience/workspace binding, action and revision binding, expiry, and replay prevention. The host—not Hermit's presentation layer—owns that trust decision.
+
 ## Hermit and the workforce
 
 Hermit resides in Workshop as the creator's persistent, full-size embodied assistant. Hermit helps interpret goals, inspect the workspace, propose experiments, and explain evidence. The creator remains the author and decision-maker.
