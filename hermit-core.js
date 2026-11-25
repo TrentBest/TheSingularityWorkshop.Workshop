@@ -28,6 +28,8 @@
   const issuedShells = new WeakSet();
   const issuedProposals = new WeakSet();
   const issuedReceipts = new WeakSet();
+  const proposalShells = new WeakMap();
+  const receiptProposals = new WeakMap();
   const consumedReceipts = new WeakSet();
 
   function createShell(input) {
@@ -85,6 +87,7 @@
       createdAt: (input.clock || Date.now)()
     });
     issuedProposals.add(proposal);
+    proposalShells.set(proposal, shell);
     return proposal;
   }
 
@@ -105,12 +108,14 @@
     });
     if (!Number.isFinite(receipt.expiresAt)) throw new TypeError("Approval expiry must be finite.");
     issuedReceipts.add(receipt);
+    receiptProposals.set(receipt, proposal);
     return receipt;
   }
 
   function assertCurrent(shell, proposal) {
     if (!shell || !issuedShells.has(shell)) throw new Error("Shell was not issued by this Hermit core.");
     if (!proposal || !issuedProposals.has(proposal)) throw new Error("Proposal was not issued by this Hermit core.");
+    if (proposalShells.get(proposal) !== shell) throw new Error("Proposal belongs to a different shell snapshot.");
     if (shell.id !== proposal.shellId) throw new Error("Proposal belongs to a different shell.");
     if (shell.revision !== proposal.shellRevision) throw new Error("Stale proposal: shell revision changed.");
     if (canonical(proposal.action) !== proposal.actionFingerprint) throw new Error("Proposal action was modified.");
@@ -126,6 +131,7 @@
     if (!proposal.approvalRequired) return Object.freeze({ allowed: true, reason: "capability-policy", proposalId: proposal.id });
     if (!receipt) throw new Error("Creator approval is required.");
     if (typeof receipt !== "object" || !issuedReceipts.has(receipt)) throw new Error("Approval receipt was not issued by this Hermit core.");
+    if (receiptProposals.get(receipt) !== proposal) throw new Error("Approval was issued for a different proposal instance.");
     const now = (options.clock || Date.now)();
     if (receipt.proposalId !== proposal.id || receipt.shellId !== shell.id ||
         receipt.shellRevision !== shell.revision ||
