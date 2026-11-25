@@ -53,7 +53,8 @@
   }
 
   function observe(shell, observation, clock) {
-    if (!shell || !observation) throw new TypeError("Shell and observation are required.");
+    if (!shell || !issuedShells.has(shell)) throw new TypeError("Shell must be issued by this Hermit core.");
+    if (!observation) throw new TypeError("Observation is required.");
     return Object.freeze({
       shellId: shell.id,
       shellRevision: shell.revision,
@@ -67,7 +68,8 @@
   }
 
   function propose(shell, input) {
-    if (!shell || !input) throw new TypeError("Shell and proposal are required.");
+    if (!shell || !issuedShells.has(shell)) throw new TypeError("Shell must be issued by this Hermit core.");
+    if (!input) throw new TypeError("Proposal is required.");
     const capabilityId = requireText(input.capabilityId, "Capability id");
     const capability = shell.capabilities.find(item => item.id === capabilityId);
     if (!capability) throw new Error("Capability is not declared by this shell: " + capabilityId);
