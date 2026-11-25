@@ -22,6 +22,43 @@ function fixture() {
   return { shell, proposal };
 }
 
+
+test("shell snapshots and proposal parameters are deeply immutable", () => {
+  const shell = createShell({
+    id: "immutable-shell",
+    capabilities: [{ id: "inspect", version: "1" }],
+    observations: [{ kind: "fixture", value: { nested: { count: 1 } } }],
+    limits: { workspace: { width: 4 } }
+  });
+  const proposal = propose(shell, {
+    id: "immutable-proposal",
+    capabilityId: "inspect",
+    target: "fixture",
+    parameters: { pose: { position: [1, 2, 3] } }
+  });
+
+  assert.ok(Object.isFrozen(shell.observations[0].value.nested));
+  assert.ok(Object.isFrozen(shell.limits.workspace));
+  assert.ok(Object.isFrozen(proposal.action.parameters.pose.position));
+  assert.throws(() => { shell.observations[0].value.nested.count = 2; }, TypeError);
+  assert.throws(() => { shell.limits.workspace.width = 99; }, TypeError);
+  assert.throws(() => { proposal.action.parameters.pose.position[0] = 99; }, TypeError);
+  assert.equal(shell.observations[0].value.nested.count, 1);
+  assert.equal(shell.limits.workspace.width, 4);
+  assert.equal(proposal.action.parameters.pose.position[0], 1);
+});
+
+test("observed nested values are immutable snapshots", () => {
+  const { shell } = fixture();
+  const observation = observe(shell, {
+    kind: "pose",
+    value: { joints: [{ name: "arm", angle: 0.5 }] },
+    provenance: "fixture:pose"
+  }, clock);
+  assert.throws(() => { observation.value.joints[0].angle = 1; }, TypeError);
+  assert.equal(observation.value.joints[0].angle, 0.5);
+});
+
 test("shell rejects duplicate capability identities", () => {
   assert.throws(() => createShell({
     id: "x",
