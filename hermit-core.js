@@ -104,7 +104,8 @@
     const capability = shell.capabilities.find(item => item.id === proposal.action.capabilityId);
     if (!capability) throw new Error("Capability is no longer declared.");
     if (capability.version !== proposal.action.capabilityVersion) throw new Error("Capability version changed after proposal.");
-    if (!capability.approvalRequired) return Object.freeze({ allowed: true, reason: "capability-policy", proposalId: proposal.id });
+    if (capability.approvalRequired !== proposal.approvalRequired) throw new Error("Capability approval policy changed after proposal.");
+    if (!proposal.approvalRequired) return Object.freeze({ allowed: true, reason: "capability-policy", proposalId: proposal.id });
     if (!receipt) throw new Error("Creator approval is required.");
     const now = (options.clock || Date.now)();
     if (receipt.proposalId !== proposal.id || receipt.shellId !== shell.id ||
