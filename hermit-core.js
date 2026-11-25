@@ -25,6 +25,11 @@
     return value.trim();
   }
 
+  const issuedShells = new WeakSet();
+  const issuedProposals = new WeakSet();
+  const issuedReceipts = new WeakSet();
+  const consumedReceipts = new WeakSet();
+
   function createShell(input) {
     if (!input || !Array.isArray(input.capabilities)) throw new TypeError("A shell requires a capability catalogue.");
     const ids = new Set();
@@ -34,13 +39,15 @@
       ids.add(id);
       return Object.freeze({ id, version: requireText(cap.version === undefined ? "1" : cap.version, "Capability version"), approvalRequired: cap.approvalRequired !== false });
     });
-    return Object.freeze({
+    const shell = Object.freeze({
       id: requireText(input.id, "Shell id"),
       revision: Number.isSafeInteger(input.revision) && input.revision >= 0 ? input.revision : 0,
       capabilities: Object.freeze(capabilities),
       observations: deepFreeze(clone(input.observations || [])),
       limits: deepFreeze(clone(input.limits || {}))
     });
+    issuedShells.add(shell);
+    return shell;
   }
 
   function observe(shell, observation, clock) {
@@ -68,7 +75,7 @@
       target: requireText(input.target, "Action target"),
       parameters: deepFreeze(clone(input.parameters || {}))
     });
-    return Object.freeze({
+    const proposal = Object.freeze({
       id: requireText(input.id, "Proposal id"),
       shellId: shell.id,
       shellRevision: shell.revision,
@@ -77,6 +84,8 @@
       approvalRequired: capability.approvalRequired,
       createdAt: (input.clock || Date.now)()
     });
+    issuedProposals.add(proposal);
+    return proposal;
   }
 
   function approve(shell, proposal, creatorId, options) {
@@ -85,7 +94,7 @@
     const ttlMs = Number.isFinite(options.ttlMs) && options.ttlMs > 0 ? options.ttlMs : 60000;
     assertCurrent(shell, proposal);
     if (!proposal.approvalRequired) throw new Error("This proposal does not require creator approval.");
-    return Object.freeze({
+    const receipt = Object.freeze({
       proposalId: proposal.id,
       shellId: shell.id,
       shellRevision: shell.revision,
@@ -94,15 +103,18 @@
       approvedAt: now,
       expiresAt: now + ttlMs,
     });
+    if (!Number.isFinite(receipt.expiresAt)) throw new TypeError("Approval expiry must be finite.");
+    issuedReceipts.add(receipt);
+    return receipt;
   }
 
   function assertCurrent(shell, proposal) {
-    if (!shell || !proposal || shell.id !== proposal.shellId) throw new Error("Proposal belongs to a different shell.");
+    if (!shell || !issuedShells.has(shell)) throw new Error("Shell was not issued by this Hermit core.");
+    if (!proposal || !issuedProposals.has(proposal)) throw new Error("Proposal was not issued by this Hermit core.");
+    if (shell.id !== proposal.shellId) throw new Error("Proposal belongs to a different shell.");
     if (shell.revision !== proposal.shellRevision) throw new Error("Stale proposal: shell revision changed.");
     if (canonical(proposal.action) !== proposal.actionFingerprint) throw new Error("Proposal action was modified.");
   }
-
-  const consumedReceipts = new WeakSet();
 
   function authorizeInvocation(shell, proposal, receipt, options) {
     options = options || {};
@@ -113,13 +125,14 @@
     if (capability.approvalRequired !== proposal.approvalRequired) throw new Error("Capability approval policy changed after proposal.");
     if (!proposal.approvalRequired) return Object.freeze({ allowed: true, reason: "capability-policy", proposalId: proposal.id });
     if (!receipt) throw new Error("Creator approval is required.");
+    if (typeof receipt !== "object" || !issuedReceipts.has(receipt)) throw new Error("Approval receipt was not issued by this Hermit core.");
     const now = (options.clock || Date.now)();
     if (receipt.proposalId !== proposal.id || receipt.shellId !== shell.id ||
         receipt.shellRevision !== shell.revision ||
         receipt.actionFingerprint !== proposal.actionFingerprint) {
       throw new Error("Approval does not match this exact action and shell revision.");
     }
-    if (!Number.isFinite(receipt.expiresAt) || now > receipt.expiresAt) throw new Error("Approval has expired.");
+    if (!Number.isFinite(receipt.expiresAt) || now >= receipt.expiresAt) throw new Error("Approval has expired.");
     if (consumedReceipts.has(receipt)) throw new Error("Approval has already been consumed.");
     consumedReceipts.add(receipt);
     return Object.freeze({ allowed: true, reason: "creator-approved", proposalId: proposal.id, actionFingerprint: proposal.actionFingerprint });
