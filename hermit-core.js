@@ -6,6 +6,12 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  function deepFreeze(value) {
+    if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+    Object.keys(value).forEach(key => deepFreeze(value[key]));
+    return Object.freeze(value);
+  }
+
   function canonical(value) {
     if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
     if (value && typeof value === "object") {
@@ -26,14 +32,14 @@
       const id = requireText(cap.id, "Capability id");
       if (ids.has(id)) throw new TypeError("Duplicate capability: " + id);
       ids.add(id);
-      return Object.freeze({ id, version: cap.version || "1", approvalRequired: cap.approvalRequired !== false });
+      return Object.freeze({ id, version: requireText(cap.version === undefined ? "1" : cap.version, "Capability version"), approvalRequired: cap.approvalRequired !== false });
     });
     return Object.freeze({
       id: requireText(input.id, "Shell id"),
       revision: Number.isSafeInteger(input.revision) && input.revision >= 0 ? input.revision : 0,
       capabilities: Object.freeze(capabilities),
-      observations: Object.freeze(clone(input.observations || [])),
-      limits: Object.freeze(clone(input.limits || {}))
+      observations: deepFreeze(clone(input.observations || [])),
+      limits: deepFreeze(clone(input.limits || {}))
     });
   }
 
@@ -44,7 +50,7 @@
       shellRevision: shell.revision,
       observedAt: (clock || Date.now)(),
       kind: requireText(observation.kind, "Observation kind"),
-      value: clone(observation.value),
+      value: deepFreeze(clone(observation.value)),
       unit: observation.unit || null,
       provenance: requireText(observation.provenance, "Observation provenance"),
       confidence: Number.isFinite(observation.confidence) ? observation.confidence : null
@@ -60,7 +66,7 @@
       capabilityId,
       capabilityVersion: capability.version,
       target: requireText(input.target, "Action target"),
-      parameters: Object.freeze(clone(input.parameters || {}))
+      parameters: deepFreeze(clone(input.parameters || {}))
     });
     return Object.freeze({
       id: requireText(input.id, "Proposal id"),
