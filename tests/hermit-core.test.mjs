@@ -263,3 +263,12 @@ test("authorization rejects a non-finite clock", () => {
     clock: () => NaN
   }), /timestamp must be finite/);
 });
+
+
+test("approval expiry rejects finite inputs whose sum overflows", () => {
+  const { shell, proposal } = fixture();
+  assert.throws(() => approve(shell, proposal, "creator-1", {
+    clock: () => Number.MAX_VALUE,
+    ttlMs: Number.MAX_VALUE
+  }), /expiry must be finite/);
+});
