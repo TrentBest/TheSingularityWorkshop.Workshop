@@ -220,3 +220,46 @@ test("resource budget rejects over-consumption", () => {
 test("resource budget rejects invalid costs", () => {
   assert.throws(() => createBudget({ units: 2 }).consume(-1), /non-negative/);
 });
+
+
+test("shell revisions reject invalid supplied values instead of silently resetting", () => {
+  for (const revision of [-1, 1.5, Number.MAX_SAFE_INTEGER + 1, NaN, Infinity]) {
+    assert.throws(() => createShell({
+      id: "invalid-revision",
+      revision,
+      capabilities: []
+    }), /non-negative safe integer/);
+  }
+  assert.equal(createShell({ id: "default-revision", capabilities: [] }).revision, 0);
+});
+
+test("observation and proposal timestamps must be finite", () => {
+  const { shell } = fixture();
+  assert.throws(() => observe(shell, {
+    kind: "pose", value: {}, provenance: "fixture"
+  }, () => NaN), /timestamp must be finite/);
+  assert.throws(() => propose(shell, {
+    id: "invalid-time", capabilityId: "physics.assess-load", target: "crate",
+    clock: () => Infinity
+  }), /timestamp must be finite/);
+});
+
+test("approval timestamps and explicit TTL values must be valid", () => {
+  const { shell, proposal } = fixture();
+  assert.throws(() => approve(shell, proposal, "creator-1", {
+    clock: () => NaN
+  }), /timestamp must be finite/);
+  for (const ttlMs of [0, -1, NaN, Infinity]) {
+    assert.throws(() => approve(shell, proposal, "creator-1", {
+      clock, ttlMs
+    }), /TTL must be a positive finite number/);
+  }
+});
+
+test("authorization rejects a non-finite clock", () => {
+  const { shell, proposal } = fixture();
+  const receipt = approve(shell, proposal, "creator-1", { clock });
+  assert.throws(() => authorizeInvocation(shell, proposal, receipt, {
+    clock: () => NaN
+  }), /timestamp must be finite/);
+});
