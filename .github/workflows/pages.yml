@@ -37,6 +37,10 @@ jobs:
           test -s docs/DIEGETIC_GUI_COMPOSITION.md
           test -s docs/HERMIT.md
           test -s docs/HERMIT_INTEGRATION.md
+          grep -F 'moniker.svg' index.html
+          grep -F 'TheSingularityWorkshop.png' index.html
+          node --check diegetic-composition.js
+          node --check hermit-core.js
           node --input-type=module <<'NODE'
           import { existsSync, readdirSync } from 'node:fs';
           import { dirname, resolve } from 'node:path';
