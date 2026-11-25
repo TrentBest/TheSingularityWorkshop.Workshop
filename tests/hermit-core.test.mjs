@@ -110,6 +110,30 @@ test("look-alike shells and proposals are rejected", () => {
   assert.throws(() => authorizeInvocation(shell, { ...proposal }, receipt, { clock }), /Proposal was not issued/);
 });
 
+test("proposal approval is bound to the exact shell snapshot", () => {
+  const { shell, proposal } = fixture();
+  const receipt = approve(shell, proposal, "creator-1", { clock });
+  const equivalentSnapshot = createShell({
+    id: shell.id,
+    revision: shell.revision,
+    capabilities: [{ id: "physics.assess-load", version: "1", approvalRequired: true }]
+  });
+  assert.throws(() => authorizeInvocation(equivalentSnapshot, proposal, receipt, { clock }), /different shell snapshot/);
+});
+
+test("approval cannot be transferred to an equivalent proposal instance", () => {
+  const { shell, proposal } = fixture();
+  const receipt = approve(shell, proposal, "creator-1", { clock });
+  const equivalentProposal = propose(shell, {
+    id: proposal.id,
+    capabilityId: "physics.assess-load",
+    target: "crate-18kg",
+    parameters: { mass: 18, unit: "kg" },
+    clock
+  });
+  assert.throws(() => authorizeInvocation(shell, equivalentProposal, receipt, { clock }), /different proposal instance/);
+});
+
 test("look-alike approval receipts are rejected", () => {
   const { shell, proposal } = fixture();
   const receipt = approve(shell, proposal, "creator-1", { clock });
