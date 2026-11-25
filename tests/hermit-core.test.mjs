@@ -97,7 +97,7 @@ test("capability version changes invalidate a proposal", () => {
     id: shell.id, revision: shell.revision,
     capabilities: [{ id: "physics.assess-load", version: "2", approvalRequired: true }]
   });
-  assert.throws(() => authorizeInvocation(changed, proposal, receipt, { clock }), /version changed/);
+  assert.throws(() => authorizeInvocation(changed, proposal, receipt, { clock }), /different shell snapshot/);
 });
 
 test("approval policy cannot be downgraded after proposal creation", () => {
@@ -106,7 +106,7 @@ test("approval policy cannot be downgraded after proposal creation", () => {
     id: shell.id, revision: shell.revision,
     capabilities: [{ id: "physics.assess-load", version: "1", approvalRequired: false }]
   });
-  assert.throws(() => authorizeInvocation(changed, proposal, null, { clock }), /approval policy changed/);
+  assert.throws(() => authorizeInvocation(changed, proposal, null, { clock }), /different shell snapshot/);
 });
 
 test("missing approval is denied", () => {
@@ -173,7 +173,7 @@ test("approval cannot be replayed for a different action", () => {
     id: "other", capabilityId: "physics.assess-load",
     target: "different-crate", parameters: { mass: 18 }, clock
   });
-  assert.throws(() => authorizeInvocation(shell, other, receipt, { clock }), /does not match/);
+  assert.throws(() => authorizeInvocation(shell, other, receipt, { clock }), /different proposal instance/);
 });
 
 test("expired approval is denied", () => {
@@ -190,7 +190,7 @@ test("stale shell revision is denied", () => {
   const changed = createShell({
     id: shell.id, revision: 8, capabilities: shell.capabilities
   });
-  assert.throws(() => authorizeInvocation(changed, proposal, receipt, { clock }), /Stale/);
+  assert.throws(() => authorizeInvocation(changed, proposal, receipt, { clock }), /different shell snapshot/);
 });
 
 test("observations carry shell revision and provenance", () => {
