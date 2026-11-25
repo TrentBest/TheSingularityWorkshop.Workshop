@@ -29,7 +29,7 @@ The loop is deliberately evidence-driven. A proposal is not an outcome; an actio
 | Gestures | Armatures, posture, movement intent, timing and motor contracts |
 | Neural Networks | Neural models and learned control; Hermit consumes these through explicit capabilities |
 | FSM_COS | MicroBundle composition and lifecycle orchestration |
-| FSM_Foundry | Execution of the assembled runtime |
+| FSM_Execution | Execution of the assembled runtime |
 
 Hermit must not create shadow implementations of Physics, Gestures, or Neural Networks. If a required capability is absent, Hermit reports the gap and can still help design the experiment.
 
