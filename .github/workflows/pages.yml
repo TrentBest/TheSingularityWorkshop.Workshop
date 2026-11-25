@@ -41,6 +41,7 @@ jobs:
           grep -F 'TheSingularityWorkshop.png' index.html
           node --check diegetic-composition.js
           node --check hermit-core.js
+          node --test tests/*.test.mjs
           node --input-type=module <<'NODE'
           import { existsSync, readdirSync } from 'node:fs';
           import { dirname, resolve } from 'node:path';
