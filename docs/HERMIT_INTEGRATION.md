@@ -58,6 +58,29 @@ The adapter belongs at the host/composition boundary. Keep Physics independent o
 6. **Outcome:** return provider results and subsequent Physics observations as separate records. Invocation acknowledgement is not proof of achieved state.
 7. **Movement:** when Gestures is used, pin the Gesture definition/version, target mapping, deterministic variation sample, duration, time mapping, coordinate frame and units. Physics remains authoritative for achieved physical state and contact.
 
+### Provider preparation is not yet consumer-scoped authorization
+
+A source audit of the current `development` branches of MicroBundleDomain and FSM_COS found an important least-privilege gap in the typed preparation seam:
+
+- `IMicroBundlePreparationContext.Providers` exposes the version-pinned provider catalogue for the entire resolved dependency closure.
+- `FsmCos.PrepareBundles` creates one `MicroBundlePreparationContext` and passes that same context instance to every `IMicroBundlePreparable` bundle.
+- `TryGetProvider<TProvider>` receives only a `MicroBundleProviderReference`.
+- `IMicroBundleProviderResolver.TryResolve<TProvider>` receives that provider reference, but not the identity of the bundle requesting it.
+
+The current resolver can verify the provider owner's bundle ID/version, provider ID, and contract version. It cannot apply a policy based on *which consuming bundle* is asking for the handle, because that identity is absent from the contract. Consequently, the current seam is typed and version-pinned, but it does not yet establish consumer-scoped least privilege. A preparable bundle can discover declarations across the closure and request any exact declaration the host resolver is willing to materialize.
+
+This is not proof that a provider is automatically exposed: the host resolver still decides whether to return an object. It is, however, a concrete limitation on the policy that resolver can enforce. Until the contract is strengthened, do not treat the shared preparation context as an authorization boundary or pass privileged provider handles to untrusted bundles.
+
+**Required contract direction (not yet implemented):**
+
+1. FSM_COS supplies an immutable, host-derived requesting-bundle identity for each preparation callback.
+2. The typed provider request binds that consumer identity to the exact provider owner ID/version, provider ID, and contract version.
+3. The host resolver receives both identities and applies an explicit consumer-to-provider grant policy before returning a typed handle.
+4. Provider catalogue visibility remains discovery metadata, not permission.
+5. The provider/host still enforces authorization at each privileged invocation, including current revision, expiry, replay state, revocation, quotas, and cancellation. Possessing a previously resolved handle must not bypass those checks.
+
+The exact API shape belongs in MicroBundleDomain and FSM_COS, coordinated with their owners. Workshop should consume the resulting contract rather than invent a parallel provider-resolution mechanism.
+
 ## Host-owned memory
 
 Hermit's durable memory must be supplied by the trusted host, not browser storage or hidden model state. A memory record needs at least:
@@ -76,6 +99,7 @@ Memory retrieval is advisory context. It never grants capability, approval, or p
 
 - [x] Deterministic browser reference core and acceptance tests.
 - [x] Current Physics and Gestures seams inventoried without inventing provider APIs.
+- [ ] Consumer-scoped provider resolution and host policy enforcement.
 - [ ] Trusted host-side authorization and durable replay protection.
 - [ ] GUI execution-host contract available for Workshop composition.
 - [ ] Physics provider adapter with typed, provenance-bearing observations.
